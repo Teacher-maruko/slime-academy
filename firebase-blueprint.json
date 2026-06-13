@@ -1,0 +1,53 @@
+{
+  "entities": {
+    "Class": {
+      "title": "Class",
+      "description": "A representation of a teacher's classroom",
+      "type": "object",
+      "properties": {
+        "className": {
+          "type": "string",
+          "description": "The name of the class"
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Creation timestamp"
+        },
+        "teacherId": {
+          "type": "string",
+          "description": "Identifier of the teacher who created this class"
+        }
+      },
+      "required": ["className", "createdAt", "teacherId"]
+    },
+    "Student": {
+      "title": "Student",
+      "description": "Student in a classroom with state, points, and pet stats",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "name": { "type": "string" },
+        "joinedAt": { "type": "string" },
+        "points": { "type": "number" },
+        "coins": { "type": "number" },
+        "hasChosenEgg": { "type": "boolean" },
+        "element": { "type": "string" },
+        "petName": { "type": "string" },
+        "title": { "type": "string" },
+        "petLevel": { "type": "number", "description": "Flat representation of pet's level for simplicity/stats or sync" }
+      },
+      "required": ["id", "name", "points", "joinedAt"]
+    }
+  },
+  "firestore": {
+    "/classes/{classCode}": {
+      "schema": "Class",
+      "description": "Collection of classrooms"
+    },
+    "/classes/{classCode}/students/{studentId}": {
+      "schema": "Student",
+      "description": "Students enrolled in a specific classroom"
+    }
+  }
+}

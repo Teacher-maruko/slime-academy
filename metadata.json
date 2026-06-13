@@ -1,0 +1,6 @@
+{
+  "name": "三甲寶貝任務列表",
+  "description": "具有史萊姆養成、自訂食物、計時器、任務庫及轉蛋背景等多功能班級管理與趣味養成系統。",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}

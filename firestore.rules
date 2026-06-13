@@ -1,0 +1,59 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // Default deny
+    match /{document=**} {
+      allow read, write: if false;
+    }
+
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    function isValidId(id) {
+      return id is string && id.size() >= 1 && id.size() <= 128 && id.matches('^[a-zA-Z0-9_\\-]+$');
+    }
+
+    // Classes Rules Path
+    match /classes/{classCode} {
+      // Anyone can get a class to check if it exists when joining
+      allow get: if isValidId(classCode);
+      
+      // Signed in teachers/users can create classes
+      allow create: if isSignedIn() && isValidId(classCode) && request.resource.data.className is string;
+      
+      // Update/delete isallowed for the teacher
+      allow update, delete: if isSignedIn() && isValidId(classCode);
+
+      // Students subcollection rules
+      match /students/{studentId} {
+        // Allow reads for registered/authenticating students or teacher
+        allow get, list: if isValidId(classCode) && isValidId(studentId);
+        
+        // Anyone can join if classCode and studentId are valid
+        allow create: if isValidId(classCode) && isValidId(studentId) && request.resource.data.name is string;
+        
+        // Allowed to updates points/pet stats for synchronization
+        allow update: if isValidId(classCode) && isValidId(studentId);
+        
+        // Allowed to delete
+        allow delete: if isValidId(classCode) && isValidId(studentId);
+      }
+
+      // Gacha items rules
+      match /gachaItems/{itemId} {
+        allow read, write: if isValidId(classCode) && isValidId(itemId);
+      }
+
+      // Achievements rules
+      match /achievements/{achId} {
+        allow read, write: if isValidId(classCode) && isValidId(achId);
+      }
+
+      // Class settings rules (for mainTitle, taskTemplates, customFoods, password backups, etc.)
+      match /settings/{settingId} {
+        allow read, write: if isValidId(classCode) && isValidId(settingId);
+      }
+    }
+  }
+}
