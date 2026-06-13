@@ -411,7 +411,8 @@ export default function App() {
     bossName: "🗑️ 垃圾怪獸",
     bossHp: 500,
     bossMaxHp: 500,
-
+    
+    timerSettings: { minutes: 5, seconds: 0 },
     classConstructionData: {
   level: 1,
   progress: 0,
@@ -419,7 +420,6 @@ export default function App() {
   buildingName: "🌱 班級世界樹"
 },
     
-    timerSettings: { minutes: 5, seconds: 0 },
     backgroundGachaItems: defaultBackgroundGachaItems
   });
 
@@ -2494,11 +2494,11 @@ export default function App() {
                       <span className="text-xs font-extrabold text-[#5b21b6] block mb-2">👤 點選名字完成快速回報：</span>
                       <div className="grid grid-cols-2 sm:grid-cols-4 md:grid-cols-5 gap-2 max-h-[160px] overflow-y-auto pr-1">
                         <div className="game-box p-4 mb-4 bg-white">
-  <h2 className="text-3xl font-black text-center">
+  <h2 className="text-4xl font-black text-center text-green-700 mb-2">
     {appData.classConstructionData?.buildingName}
   </h2>
 
-  <div className="text-center text-xl font-bold">
+  <div className="text-center text-2xl font-bold text-green-700">
     Lv.{appData.classConstructionData?.level}
   </div>
 
