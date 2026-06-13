@@ -381,6 +381,9 @@ export function generateDetailedSlimeSVG(student: Partial<Student>): string {
   // --- RENDERING ROUTINE: EGG (Level 1 / egg未選) ---
   if (isEgg) {
     const eggBody: string[] = [];
+    eggSvg.push(`<svg viewBox="0 0 200 240" xmlns="http://www.w3.org/2000/svg" style="width: 100%; height: 100%;">`);
+    eggSvg.push(`<defs><radialGradient id="eggGrad" cx="40%" cy="35%"><stop offset="0%" style="stop-color:${palette.light};stop-opacity:0.9" /><stop offset="100%" style="stop-color:${palette.main};stop-opacity:1" /></radialGradient><filter id="softGlow"><feGaussianBlur stdDeviation="2" /></filter></defs>`);
+    eggSvg.push(`<style>${css}</style>`);
     const eggRows: { [key: number]: [number, number] } = {
       8: [15, 16],
       9: [14, 17],
@@ -402,9 +405,19 @@ export function generateDetailedSlimeSVG(student: Partial<Student>): string {
       25: [12, 19]
     };
 
+    // Shadow
+    eggSvg.push(`<ellipse cx="100" cy="210" rx="50" ry="12" fill="#000000" opacity="0.2" class="slime-shadow" />`);
+    
     // Draw bottom shadow - slightly wider for stable bottom
     eggBody.push(`<ellipse cx="128" cy="208" rx="48" ry="10" fill="#000000" class="slime-shadow" />`);
 
+    // Main egg body - very round and soft
+    eggSvg.push(`<g class="breathe-grp">`);
+    eggSvg.push(`<ellipse cx="100" cy="115" rx="52" ry="68" fill="url(#eggGrad)" stroke="${palette.border}" stroke-width="2" />`);
+
+    // Glossy highlight - larger for kawaii effect
+    eggSvg.push(`<ellipse cx="72" cy="65" rx="28" ry="35" fill="${palette.shine}" opacity="0.45" filter="url(#softGlow)" />`);
+    
     // Top & Bottom border lines
     for (let col = 15; col <= 16; col++) eggBody.push(px(col, 7, palette.border, "breathe-grp"));
     for (let col = 12; col <= 19; col++) eggBody.push(px(col, 26, palette.border, "breathe-grp"));
