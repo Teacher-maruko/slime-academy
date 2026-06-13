@@ -248,33 +248,33 @@ export function generateDetailedSlimeSVG(student: Partial<Student>): string {
   const css = `
     @keyframes sFloat {
       0%, 100% { transform: translateY(0px); }
-      50% { transform: translateY(-3px); }
+      50% { transform: translateY(-5px); }
     }
     @keyframes sBreathe {
       0%, 100% { transform: scale(1, 1); }
-      50% { transform: scale(1.03, 0.95); }
+      50% { transform: scale(1.06, 0.94); }
     }
     @keyframes shScale {
-      0%, 100% { transform: scaleX(1); opacity: 0.16; }
-      50% { transform: scaleX(0.85); opacity: 0.10; }
+      0%, 100% { transform: scaleX(1); opacity: 0.2; }
+      50% { transform: scaleX(0.75); opacity: 0.08; }
     }
     @keyframes spUp {
       0% { transform: translateY(0px) scale(1); opacity: 0; }
       20% { opacity: 0.95; }
-      100% { transform: translateY(-16px) scale(0.5); opacity: 0; }
+      100% { transform: translateY(-30px) scale(0.3); opacity: 0; }
     }
     @keyframes spUpAlt {
       0% { transform: translateY(0px) scale(0.8); opacity: 0; }
       30% { opacity: 1; }
-      100% { transform: translateY(-22px) scale(0.3); opacity: 0; }
+      100% { transform: translateY(-35px) scale(0.15); opacity: 0; }
     }
     @keyframes wL {
       0%, 100% { transform: rotate(0deg); }
-      50% { transform: rotate(-3deg); }
+      50% { transform: rotate(-5deg); }
     }
     @keyframes wR {
       0%, 100% { transform: rotate(0deg); }
-      50% { transform: rotate(3deg); }
+      50% { transform: rotate(5deg); }
     }
     @keyframes wfL {
       0%, 100% { transform: translateY(0px) rotate(0deg); }
@@ -286,29 +286,29 @@ export function generateDetailedSlimeSVG(student: Partial<Student>): string {
     }
     @keyframes sTiltShake {
       0%, 100% { transform: rotate(0deg) translateY(0px); }
-      10%, 30%, 50% { transform: rotate(-4deg) translateY(-1px); }
-      20%, 40% { transform: rotate(4deg) translateY(1px); }
+      10%, 30%, 50% { transform: rotate(-4deg) translateY(-2px); }
+      20%, 40% { transform: rotate(4deg) translateY(2px); }
       60% { transform: rotate(0deg) translateY(0px); }
     }
     .slime-shadow {
       animation: shScale 4s ease-in-out infinite;
-      transform-origin: 128px 208px;
+      transform-origin: center;
     }
     .float-grp {
       animation: sFloat 4s ease-in-out infinite;
-      transform-origin: 128px 200px;
+      transform-origin: center;
     }
     .breathe-grp {
       animation: sBreathe 3s ease-in-out infinite;
-      transform-origin: 128px 208px;
+      transform-origin: center;
     }
     .wiggle-l {
       animation: wL 3s ease-in-out infinite;
-      transform-origin: 96px 144px;
+      transform-origin: left center;
     }
     .wiggle-r {
       animation: wR 3s ease-in-out infinite;
-      transform-origin: 160px 144px;
+      transform-origin: right center;
     }
     .wing-l {
       animation: wfL 3.5s ease-in-out infinite;
@@ -328,24 +328,24 @@ export function generateDetailedSlimeSVG(student: Partial<Student>): string {
     }
     .hatch-shake {
       animation: sTiltShake 2.5s ease-in-out infinite;
-      transform-origin: 128px 208px;
+      transform-origin: center;
     }
     .sad-shrink-grp {
-      transform: scale(0.8);
-      transform-origin: 128px 208px;
+      transform: scale(0.85);
+      transform-origin: center;
     }
     @keyframes sGlow {
-      0%, 100% { filter: drop-shadow(0 0 1px #FBBF24) brightness(1); }
-      50% { filter: drop-shadow(0 0 6px #FBBF24) brightness(1.15); }
+      0%, 100% { filter: drop-shadow(0 0 2px #FBBF24) brightness(1); }
+      50% { filter: drop-shadow(0 0 10px #FBBF24) brightness(1.2); }
     }
     .excited-glow-grp {
       animation: sGlow 2s ease-in-out infinite;
     }
     @keyframes sHop {
       0%, 100% { transform: translateY(0px) scale(1, 1); }
-      25% { transform: translateY(-4px) scale(0.98, 1.02); }
-      50% { transform: translateY(0px) scale(1.02, 0.98); }
-      75% { transform: translateY(-2px) scale(0.99, 1.01); }
+      25% { transform: translateY(-8px) scale(0.96, 1.04); }
+      50% { transform: translateY(0px) scale(1.04, 0.96); }
+      75% { transform: translateY(-4px) scale(0.99, 1.01); }
     }
     .happy-hop-grp {
       animation: sHop 1.5s ease-in-out infinite;
@@ -354,6 +354,28 @@ export function generateDetailedSlimeSVG(student: Partial<Student>): string {
     .tired-slow-grp .breathe-grp {
       animation-duration: 6s !important;
     }
+    @keyframes floatAura {
+      0%, 100% { opacity: 0.25; transform: scale(1); }
+      50% { opacity: 0.5; transform: scale(1.15); }
+    }
+    .aura {
+      animation: floatAura 3s ease-in-out infinite;
+    }
+    @keyframes orbitCompanion1 {
+      0% { transform: rotate(0deg) translateX(50px) rotate(0deg); }
+      100% { transform: rotate(360deg) translateX(50px) rotate(-360deg); }
+    }
+    @keyframes orbitCompanion2 {
+      0% { transform: rotate(120deg) translateX(50px) rotate(0deg); }
+      100% { transform: rotate(480deg) translateX(50px) rotate(-360deg); }
+    }
+    @keyframes orbitCompanion3 {
+      0% { transform: rotate(240deg) translateX(50px) rotate(0deg); }
+      100% { transform: rotate(600deg) translateX(50px) rotate(-360deg); }
+    }
+    .orbit1 { animation: orbitCompanion1 8s linear infinite; }
+    .orbit2 { animation: orbitCompanion2 8s linear infinite; }
+    .orbit3 { animation: orbitCompanion3 8s linear infinite; }
   `;
 
   // --- RENDERING ROUTINE: EGG (Level 1 / egg未選) ---
