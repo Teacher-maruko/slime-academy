@@ -235,7 +235,7 @@ export function generateDetailedSlimeSVG(student: Partial<Student>): string {
 
   // Helper to draw single block
   const px = (col: number, row: number, fill: string, className = "") =>
-    `<rect x="${col * 8}" y="${row * 8}" width="8" height="8" fill="${fill}" class="${className}" style="shape-rendering: crispEdges;" />`;
+    `<rect x="${col * 6}" y="${row * 6}" width="6" height="6" fill="${fill}" class="${className}"  />`;
 
   // 2. CSS STYLES INJECTION - Smooth Idle Pixel Gaming Animations
   const css = `
@@ -425,7 +425,7 @@ export function generateDetailedSlimeSVG(student: Partial<Student>): string {
     });
 
     return `
-      <svg viewBox="0 0 256 256" xmlns="http://www.w3.org/2000/svg" style="image-rendering:pixelated; width: 100%; height: 100%;">
+      <svg viewBox="0 0 256 256" xmlns="http://www.w3.org/2000/svg" style="width: 100%; height: 100%;">
         <style>${css}</style>
         ${eggBody.join("")}
       </svg>
@@ -552,7 +552,7 @@ export function generateDetailedSlimeSVG(student: Partial<Student>): string {
     });
 
     return `
-      <svg viewBox="0 0 256 256" xmlns="http://www.w3.org/2000/svg" style="image-rendering:pixelated; width: 100%; height: 100%;">
+      <svg viewBox="0 0 256 256" xmlns="http://www.w3.org/2000/svg" style="style="width: 100%; height: 100%;" width: 100%; height: 100%;">
         <style>${css}</style>
         <!-- The top half wiggles/shakes, giving hatching vibes! -->
         <g class="hatch-shake">
@@ -1350,7 +1350,7 @@ export function generateDetailedSlimeSVG(student: Partial<Student>): string {
 
   // --- CONSOLIDATED DIGITAL SPRITE OUTPUT ---
   return `
-    <svg viewBox="0 0 256 256" xmlns="http://www.w3.org/2000/svg" style="image-rendering:pixelated; width: 100%; height: 100%;">
+    <svg viewBox="0 0 256 256" xmlns="http://www.w3.org/2000/svg" style="style="width: 100%; height: 100%;" width: 100%; height: 100%;">
       <style>${css}</style>
       <!-- Background Layers (Wings, Tail, Magic circles) -->
       ${backgroundLayer.join("")}
