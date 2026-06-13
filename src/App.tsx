@@ -64,7 +64,7 @@ class SafeRenderWrapper extends React.Component<{
             <div className="w-16 h-16 bg-red-50 border-4 border-red-500 text-red-500 rounded-2xl flex items-center justify-center mb-4 animate-bounce">
               <span className="text-3xl">⚠️</span>
             </div>
-            <h3 className="text-2xl font-black text-red-600 mb-2">
+            <h3 className="text-4xl font-black text-red-600 mb-2">
               系統發生錯誤 ({this.props.fallbackTitle})
             </h3>
             <p className="text-sm font-bold text-gray-500 mb-4">
@@ -2714,7 +2714,7 @@ export default function App() {
                     Lv.{s.pet?.level || 1}
                   </div>
                   <div className="text-sm font-bold text-orange-600 bg-white/95 px-2 py-0.5 rounded border border-orange-200 shadow-sm">
-                    {s.points} pts
+                    ⭐ {s.points}
                   </div>
                 </div>
               </div>
