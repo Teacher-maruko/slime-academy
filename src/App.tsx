@@ -3986,6 +3986,120 @@ export default function App() {
         </SafeRenderWrapper>
       )}
 
+      {/* 🥚 EGG SELECTION MODAL OVERLAY */}
+      {eggSelectionStudentId && (
+        <SafeRenderWrapper
+          fallbackTitle="選擇寵物蛋"
+          onReset={() => setEggSelectionStudentId(null)}
+        >
+          {(() => {
+            const eggStudent = appData.students.find(s => s.id === eggSelectionStudentId);
+            if (!eggStudent) return null;
+            return (
+              <div className="modal-backdrop flex items-center justify-center p-4 bg-slate-900/85 z-[9999] fixed inset-0 overflow-y-auto">
+                <div className="game-box bg-white p-6 max-w-2xl w-full flex flex-col shadow-2xl border-[6px] border-indigo-600 rounded-3xl relative animate-scale-up my-8">
+                  {/* Close button */}
+                  <button 
+                    onClick={() => setEggSelectionStudentId(null)}
+                    className="absolute top-4 right-4 bg-gray-100 hover:bg-red-100 hover:text-red-600 text-gray-500 w-8 h-8 rounded-full flex items-center justify-center font-black transition-colors cursor-pointer text-sm"
+                  >
+                    ✕
+                  </button>
+
+                  <div className="text-center mb-6">
+                    <span className="text-5xl">🥚 ✨</span>
+                    <h2 className="text-3xl font-black text-indigo-700 mt-2">
+                      🐣 召喚屬於你的史萊姆！
+                    </h2>
+                    <p className="text-sm font-bold text-gray-500 mt-2">
+                      【{eggStudent.name}】同學，請選一顆生命之蛋簽訂孵化契約。
+                      <br />每個屬性都代表不同的史萊姆基因與冒險傾向喔！
+                    </p>
+                  </div>
+
+                  <div className="grid grid-cols-1 sm:grid-cols-5 gap-3.5 mb-6 text-left">
+                    {[
+                      { 
+                        id: "star", 
+                        name: "星空蛋", 
+                        type: "星之史萊姆",
+                        emoji: "🥚⭐", 
+                        bg: "from-amber-100 to-yellow-50 border-yellow-400 text-yellow-900",
+                        badge: "bg-yellow-500",
+                        desc: "充滿創造力，熱愛冒險與天馬行空的幻想。" 
+                      },
+                      { 
+                        id: "forest", 
+                        name: "森林蛋", 
+                        type: "森之史萊姆",
+                        emoji: "🥚🌳", 
+                        bg: "from-emerald-100 to-green-50 border-emerald-400 text-emerald-900",
+                        badge: "bg-emerald-500",
+                        desc: "溫柔踏實，與自然相伴，具有高合作精神。" 
+                      },
+                      { 
+                        id: "candy", 
+                        name: "蜜糖蛋", 
+                        type: "糖之史萊姆",
+                        emoji: "🥚🍭", 
+                        bg: "from-pink-100 to-rose-50 border-pink-400 text-pink-900",
+                        badge: "bg-pink-500",
+                        desc: "超萌活力基因，可培養極高的親合度與治癒感。" 
+                      },
+                      { 
+                        id: "magic", 
+                        name: "法力蛋", 
+                        type: "魔之史萊姆",
+                        emoji: "🥚🔮", 
+                        bg: "from-purple-100 to-violet-50 border-purple-400 text-purple-900",
+                        badge: "bg-purple-500",
+                        desc: "蘊藏深奧魔法，聰穎文雅，最喜歡求知與閱讀。" 
+                      },
+                      { 
+                        id: "crystal", 
+                        name: "水晶蛋", 
+                        type: "水晶史萊姆",
+                        emoji: "🥚💎", 
+                        bg: "from-sky-100 to-blue-50 border-sky-400 text-blue-900",
+                        badge: "bg-blue-500",
+                        desc: "高潔晶瑩體，開朗自信，極具口才表述天賦。" 
+                      },
+                    ].map((egg) => {
+                      return (
+                        <button
+                          key={egg.id}
+                          onClick={() => handleChooseEgg(egg.id as any)}
+                          className={`flex flex-col items-center p-3 rounded-2xl border-[3.5px] bg-gradient-to-b ${egg.bg} hover:scale-105 active:scale-95 transition-transform shadow-[4px_4px_0px_rgba(0,0,0,0.15)] hover:shadow-[4px_4px_0px_rgba(0,0,0,0.25)] text-center cursor-pointer`}
+                        >
+                          <div className="w-16 h-16 mb-2 flex items-center justify-center animate-bounce-slow">
+                            <span className="text-5xl">{egg.emoji}</span>
+                          </div>
+                          
+                          <span className={`${egg.badge} text-white font-extrabold text-[9px] px-2 py-0.5 rounded-full mb-1`}>
+                            {egg.name}
+                          </span>
+                          <strong className="text-xs font-black mb-1">{egg.type}</strong>
+                          <p className="text-[9px] text-gray-550 leading-tight font-medium mt-1">{egg.desc}</p>
+                        </button>
+                      );
+                    })}
+                  </div>
+
+                  <div className="flex justify-center border-t border-gray-150 pt-4 gap-4">
+                    <button
+                      onClick={() => setEggSelectionStudentId(null)}
+                      className="btn-game bg-gray-100 hover:bg-gray-200 text-gray-700 font-extrabold px-6 py-2 rounded-xl border-[2.5px] border-gray-400 text-xs shadow-none cursor-pointer"
+                    >
+                      暫不召喚
+                    </button>
+                  </div>
+                </div>
+              </div>
+            );
+          })()}
+        </SafeRenderWrapper>
+      )}
+
       {/* 🏗️ CLASS IDEAL LAND ADDON MODAL OVERLAY */}
       {showClassAddonsModal && (
         <ClassAddonsModal

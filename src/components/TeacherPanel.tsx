@@ -912,34 +912,32 @@ export default function TeacherPanel({
       showDialog({ title: "提醒", message: "請輸入商品名稱！", type: "alert" });
       return;
     }
-    let updatedItem: any = null;
+    const itemsList = appData.backgroundGachaItems || defaultBackgroundGachaItems;
+    const currentItem = itemsList.find(item => item.id === id);
+    if (!currentItem) return;
+
+    const updatedItem = {
+      ...currentItem,
+      name: editName.trim(),
+      category: editCategory,
+      type: editCategory,
+      rarity: editRarity,
+      probability: Number(editProbability) || 20,
+      equippedPosition: "fullscreen",
+      placement: "fullscreen",
+      enabled: editEnabled,
+      isDefault: currentItem.isDefault || false
+    };
+
     setAppData((prev) => {
-      const itemsList = prev.backgroundGachaItems || defaultBackgroundGachaItems;
-      const updated = itemsList.map((item) => {
-        if (item.id === id) {
-          updatedItem = {
-            ...item,
-            name: editName.trim(),
-            category: editCategory,
-            type: editCategory,
-            rarity: editRarity,
-            probability: Number(editProbability) || 20,
-            equippedPosition: "fullscreen",
-            placement: "fullscreen",
-            enabled: editEnabled,
-            isDefault: item.isDefault || false
-          };
-          return updatedItem;
-        }
-        return item;
-      });
+      const prevList = prev.backgroundGachaItems || defaultBackgroundGachaItems;
+      const updated = prevList.map((item) => item.id === id ? updatedItem : item);
       return { ...prev, backgroundGachaItems: updated };
     });
 
-    if (isOnlineMode && isFirebaseReady && updatedItem) {
-      const targetItem = updatedItem;
+    if (isOnlineMode && isFirebaseReady) {
       import("../firebase").then(({ saveGachaItem }) => {
-        saveGachaItem(classCode, targetItem).catch(e => console.error("Firebase sync error:", e));
+        saveGachaItem(classCode, updatedItem).catch(e => console.error("Firebase sync error:", e));
       });
     }
 
@@ -948,26 +946,21 @@ export default function TeacherPanel({
   };
 
   const handleToggleGachaItem = (id: string) => {
-    let updatedItem: any = null;
+    const itemsList = appData.backgroundGachaItems || defaultBackgroundGachaItems;
+    const currentItem = itemsList.find(item => item.id === id);
+    if (!currentItem) return;
+
+    const updatedItem = { ...currentItem, enabled: !currentItem.enabled };
+
     setAppData((prev) => {
-      const itemsList = prev.backgroundGachaItems || defaultBackgroundGachaItems;
-      const updated = itemsList.map((item) => {
-        if (item.id === id) {
-          updatedItem = { ...item, enabled: !item.enabled };
-          return updatedItem;
-        }
-        return item;
-      });
-      return {
-        ...prev,
-        backgroundGachaItems: updated
-      };
+      const prevList = prev.backgroundGachaItems || defaultBackgroundGachaItems;
+      const updated = prevList.map((item) => item.id === id ? updatedItem : item);
+      return { ...prev, backgroundGachaItems: updated };
     });
 
-    if (isOnlineMode && isFirebaseReady && updatedItem) {
-      const targetItem = updatedItem;
+    if (isOnlineMode && isFirebaseReady) {
       import("../firebase").then(({ saveGachaItem }) => {
-        saveGachaItem(classCode, targetItem).catch(e => console.error("Firebase sync error:", e));
+        saveGachaItem(classCode, updatedItem).catch(e => console.error("Firebase sync error:", e));
       });
     }
   };
@@ -1343,6 +1336,47 @@ export default function TeacherPanel({
           }));
           return { ...prev, students: nextStudents, groups: nextGroups };
         });
+
+        // 1. Clean up from ALL potential local storage backup keys immediately
+        const backupKeys = [
+          "class_quest_ultimate",
+          "classQuestData",
+          "class_slime_data",
+          "studentData",
+          "students",
+          "classData"
+        ];
+        backupKeys.forEach((key) => {
+          try {
+            const raw = localStorage.getItem(key);
+            if (raw) {
+              const parsed = JSON.parse(raw);
+              if (parsed) {
+                if (Array.isArray(parsed)) {
+                  const filtered = parsed.filter((s: any) => s && s.id !== id);
+                  localStorage.setItem(key, JSON.stringify(filtered));
+                } else if (parsed.students && Array.isArray(parsed.students)) {
+                  parsed.students = parsed.students.filter((s: any) => s && s.id !== id);
+                  localStorage.setItem(key, JSON.stringify(parsed));
+                }
+              }
+            }
+          } catch (e) {
+            console.warn(`Clean localStorage key: "${key}" failed but safely bypassed.`, e);
+          }
+        });
+
+        // 2. Clear current student profile memory ID if it matches
+        if (localStorage.getItem("current_student_modal_id") === id) {
+          localStorage.removeItem("current_student_modal_id");
+        }
+
+        // 3. Sync Firebase if online
+        if (isOnlineMode && isFirebaseReady) {
+          import("../firebase").then(({ deleteStudentData }) => {
+            deleteStudentData(classCode, id).catch(e => console.error("Firebase student sync delete error:", e));
+          });
+        }
       }
     });
   };
