@@ -411,6 +411,13 @@ export default function App() {
     bossName: "🗑️ 垃圾怪獸",
     bossHp: 500,
     bossMaxHp: 500,
+
+    classConstructionData: {
+  level: 1,
+  progress: 0,
+  target: 100,
+  buildingName: "🌱 班級世界樹"
+},
     
     timerSettings: { minutes: 5, seconds: 0 },
     backgroundGachaItems: defaultBackgroundGachaItems
