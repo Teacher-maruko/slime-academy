@@ -2493,6 +2493,37 @@ export default function App() {
                     <div className="pt-1">
                       <span className="text-xs font-extrabold text-[#5b21b6] block mb-2">👤 點選名字完成快速回報：</span>
                       <div className="grid grid-cols-2 sm:grid-cols-4 md:grid-cols-5 gap-2 max-h-[160px] overflow-y-auto pr-1">
+                        <div className="game-box p-4 mb-4 bg-white">
+  <h2 className="text-3xl font-black text-center">
+    {appData.classConstructionData?.buildingName}
+  </h2>
+
+  <div className="text-center text-xl font-bold">
+    Lv.{appData.classConstructionData?.level}
+  </div>
+
+  <div className="w-full bg-gray-200 rounded-full h-8 mt-3">
+    <div
+      className="bg-green-500 h-full transition-all"
+      style={{
+        width: `${
+          (
+            (appData.classConstructionData?.progress || 0) /
+            (appData.classConstructionData?.target || 100)
+          ) * 100
+        }%`
+      }}
+    />
+  </div>
+
+  <div className="text-center mt-2">
+    {appData.classConstructionData?.progress}
+    /
+    {appData.classConstructionData?.target}
+  </div>
+</div>
+                        
+                        
                         {appData.students.map((st) => {
                           const hasCompleted = t.completedBy.includes(st.id);
                           return (
