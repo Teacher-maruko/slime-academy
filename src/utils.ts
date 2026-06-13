@@ -173,64 +173,64 @@ export function generateDetailedSlimeSVG(student: Partial<Student>): string {
   // 1. Core Color Palettes
   const palette = {
     magic: {
-      main: "#8A4FFF",
-      dark: "#5822B4",
-      light: "#BB99FF",
+      main: "#9D6FD4",
+      dark: "#6B4A9C",
+      light: "#C9B5E6",
       shine: "#FFFFFF",
-      border: "#1C1032",
-      horn: "#491C80",
-      hornLight: "#9C63E6",
-      particle: "#D4B3FF"
+      border: "#2D1B4E",
+      horn: "#5C3BA8",
+      hornLight: "#B89FD9",
+      particle: "#DFC7F0"
     },
     crystal: {
-      main: "#48CFFF",
-      dark: "#1184B4",
-      light: "#A6ECFF",
+      main: "#6FD9FF",
+      dark: "#3C9FC9",
+      light: "#B4EBFF",
       shine: "#FFFFFF",
-      border: "#0C1D2A",
-      horn: "#1098CB",
-      hornLight: "#A6E8FF",
-      particle: "#BCF0FF"
+      border: "#1A3A4D",
+      horn: "#4DBFD0",
+      hornLight: "#B8E8F0",
+      particle: "#D0F0FF"
     },
     candy: {
-      main: "#FF75A9",
-      dark: "#D13271",
-      light: "#FFB8D3",
+      main: "#FF9BC5",
+      dark: "#E6699F",
+      light: "#FFD0E5",
       shine: "#FFFFFF",
-      border: "#2B0C1A",
-      horn: "#FF5E9B",
-      hornLight: "#FFF0F5",
-      particle: "#FFE4E1"
+      border: "#4D1A2D",
+      horn: "#FF7BA8",
+      hornLight: "#FFF0F8",
+      particle: "#FFE8F0"
     },
     forest: {
-      main: "#4FE075",
-      dark: "#1C9E40",
-      light: "#9CFBB8",
+      main: "#8FE89A",
+      dark: "#5CB85C",
+      light: "#C5F0CA",
       shine: "#FFFFFF",
-      border: "#0F2614",
-      horn: "#2DBE55",
-      hornLight: "#D4FFDE",
-      particle: "#ADE8BC"
+      border: "#2D5C33",
+      horn: "#6FD47E",
+      hornLight: "#E8F7ED",
+      particle: "#D0F0DB"
     },
     star: {
-      main: "#FFAC1C",
-      dark: "#C36400",
-      light: "#FFD67D",
+      main: "#FFD166",
+      dark: "#E6A833",
+      light: "#FFE8A8",
       shine: "#FFFFFF",
-      border: "#2E1C05",
-      horn: "#FF8C00",
-      hornLight: "#FFFACD",
-      particle: "#FFE57F"
+      border: "#664D00",
+      horn: "#FFC433",
+      hornLight: "#FFFADB",
+      particle: "#FFF4D0"
     }
   }[element] || {
-    main: "#FF75A9",
-    dark: "#D13271",
-    light: "#FFB8D3",
+    main: "#FF9BC5",
+    dark: "#E6699F",
+    light: "#FFD0E5",
     shine: "#FFFFFF",
-    border: "#2B0C1A",
-    horn: "#FF5E9B",
-    hornLight: "#FFF0F5",
-    particle: "#FFE4E1"
+    border: "#4D1A2D",
+    horn: "#FF7BA8",
+    hornLight: "#FFF0F8",
+    particle: "#FFE8F0"
   };
 
   // Helper to draw single block
