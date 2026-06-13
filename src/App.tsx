@@ -2671,7 +2671,7 @@ export default function App() {
                 })()}
                 
                 {/* Avatar section */}
-                <div className={`w-24 h-24 relative mb-2 z-10 drop-shadow-xl ${s.hasChosenEgg ? "slime-idle" : "animate-pulse"}`}>
+                <div className={`w-36 h-36 relative mb-2 z-10 drop-shadow-xl ${s.hasChosenEgg ? "slime-idle" : "animate-pulse"}`}>
                   {s.hasChosenEgg ? (
                     <div
                        className="w-full h-full"
