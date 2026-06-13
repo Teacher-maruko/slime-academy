@@ -232,7 +232,14 @@ export function generateDetailedSlimeSVG(student: Partial<Student>): string {
     hornLight: "#FFF0F8",
     particle: "#FFE8F0"
   };
-
+  // Determine evolution stage
+  let evolutionStage = 0;
+  if (level <= 4) evolutionStage = 1; // Baby
+  else if (level <= 9) evolutionStage = 2; // Young
+  else if (level <= 14) evolutionStage = 3; // Teen
+  else if (level <= 19) evolutionStage = 4; // Elite
+  else evolutionStage = 5; // Legendary
+  
   // Helper to draw single block
   const px = (col: number, row: number, fill: string, className = "") =>
     `<rect x="${col * 8}" y="${row * 8}" width="8" height="8" fill="${fill}" class="${className}" style="shape-rendering: crispEdges;" />`;
