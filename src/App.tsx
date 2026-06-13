@@ -407,6 +407,11 @@ export default function App() {
     groups: [],
     notes: "老師可以在這裡輸入今日叮嚀、作業或提醒事項...",
     password: "0301",
+    
+    bossName: "🗑️ 垃圾怪獸",
+    bossHp: 500,
+    bossMaxHp: 500,
+    
     timerSettings: { minutes: 5, seconds: 0 },
     backgroundGachaItems: defaultBackgroundGachaItems
   });
