@@ -235,7 +235,7 @@ export function generateDetailedSlimeSVG(student: Partial<Student>): string {
 
   // Helper to draw single block
   const px = (col: number, row: number, fill: string, className = "") =>
-    `<rect x="${col * 6}" y="${row * 6}" width="6" height="6" fill="${fill}" class="${className}"  />`;
+    `<rect x="${col * 8}" y="${row * 8}" width="8" height="8" fill="${fill}" class="${className}"  />`;
 
   // 2. CSS STYLES INJECTION - Smooth Idle Pixel Gaming Animations
   const css = `
