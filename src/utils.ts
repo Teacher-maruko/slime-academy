@@ -164,1225 +164,621 @@ export function generateElementWingSVG(element: string, level: number): string {
 }
 
 export function generateDetailedSlimeSVG(student: Partial<Student>): string {
-  const expr = petExpressionSystem(student);
+  if (!student) student = {};
+  
   const level = Number(student?.pet?.level || 1);
-  const element = student?.element || "candy";
-  const isEgg = student?.hasChosenEgg === false || level === 1;
-  const isCrackedEgg = level === 2;
+  const element = student?.pet?.growthType || student?.element || "candy";
+  // Dynamically evaluate expression from system logic and cast to string for broad compatibility
+  const expr = getPetExpression(student as Student) as string;
+  const fullness = student?.currentHunger !== undefined ? student.currentHunger : (student?.petStats?.stamina !== undefined ? student.petStats.stamina : 50);
 
-  // 1. Core Color Palettes (Softer, more pastel)
-  const palette = {
-    magic: {
-      main: "#9D6FD4",
-      dark: "#6B4A9C",
-      light: "#C9B5E6",
-      shine: "#FFFFFF",
-      border: "#2D1B4E",
-      horn: "#5C3BA8",
-      hornLight: "#B89FD9",
-      particle: "#DFC7F0"
-    },
-     crystal: {
-      main: "#6FD9FF",
-      dark: "#3C9FC9",
-      light: "#B4EBFF",
-      shine: "#FFFFFF",
-      border: "#1A3A4D",
-      horn: "#4DBFD0",
-      hornLight: "#B8E8F0",
-      particle: "#D0F0FF"
-    },
-    candy: {
-      main: "#FF9BC5",
-      dark: "#E6699F",
-      light: "#FFD0E5",
-      shine: "#FFFFFF",
-      border: "#4D1A2D",
-      horn: "#FF7BA8",
-      hornLight: "#FFF0F8",
-      particle: "#FFE8F0"
-    },
-    forest: {
-      main: "#8FE89A",
-      dark: "#5CB85C",
-      light: "#C5F0CA",
-      shine: "#FFFFFF",
-      border: "#2D5C33",
-      horn: "#6FD47E",
-      hornLight: "#E8F7ED",
-      particle: "#D0F0DB"
-    },
-    star: {
-      main: "#FFD166",
-      dark: "#E6A833",
-      light: "#FFE8A8",
-      shine: "#FFFFFF",
-      border: "#664D00",
-      horn: "#FFC433",
-      hornLight: "#FFFADB",
-      particle: "#FFF4D0"
-    }
-  }[element] || {
-    main: "#FF9BC5",
-    dark: "#E6699F",
-    light: "#FFD0E5",
-    shine: "#FFFFFF",
-    border: "#4D1A2D",
-    horn: "#FF7BA8",
-    hornLight: "#FFF0F8",
-    particle: "#FFE8F0"
-  };
+  // Define element themes and colors
+  const baseGradStart = {
+    magic: "#C084FC",
+    crystal: "#38BDF8",
+    forest: "#34D399",
+    star: "#FBBF24",
+    candy: "#F472B6"
+  }[element] || "#F472B6";
 
-    // Determine evolution stage
-  let evolutionStage = 0;
-  if (level <= 4) evolutionStage = 1; // Baby
-  else if (level <= 9) evolutionStage = 2; // Young
-  else if (level <= 14) evolutionStage = 3; // Teen
-  else if (level <= 19) evolutionStage = 4; // Elite
-  else evolutionStage = 5; // Legendary
+  const baseGradEnd = {
+    magic: "#6B21A8",
+    crystal: "#0369A1",
+    forest: "#065F46",
+    star: "#9A3412",
+    candy: "#9D174D"
+  }[element] || "#9D174D";
 
-  // Helper to draw single block
-  const px = (col: number, row: number, fill: string, className = "") =>
-    `<rect x="${col * 8}" y="${row * 8}" width="8" height="8" fill="${fill}" class="${className}"  />`;
+  // Satiety visual adjustments
+  const isHungry = fullness < 20;
+  const isTiredStatus = fullness < 40 && fullness >= 20;
+  const isPlump = fullness >= 80;
 
-   // 2. CSS STYLES INJECTION - Smooth Idle Animations
-  const css = `
-    @keyframes sFloat {
-      0%, 100% { transform: translateY(0px); }
-      50% { transform: translateY(-5px); }
+  // Luster degradation for low satiety
+  const gradStart = isHungry ? "#94A3B8" : (isTiredStatus ? {
+    magic: "#A78BFA",
+    crystal: "#22D3EE",
+    forest: "#6EE7B7",
+    star: "#FCD34D",
+    candy: "#FBCFE8"
+  }[element] || "#FBCFE8" : baseGradStart);
+
+  const gradEnd = isHungry ? "#475569" : (isTiredStatus ? {
+    magic: "#5B21B6",
+    crystal: "#155E75",
+    forest: "#047857",
+    star: "#B45309",
+    candy: "#BE185D"
+  }[element] || "#BE185D" : baseGradEnd);
+
+  // Border/Outline Color
+  const outlineColor = isHungry ? "#1E293B" : {
+    magic: "#2E1065",
+    crystal: "#082F49",
+    forest: "#022C22",
+    star: "#451A03",
+    candy: "#500724"
+  }[element] || "#500724";
+
+  // Particle colors
+  const particleColor = {
+    magic: "#E9D5FF",
+    crystal: "#E0F2FE",
+    forest: "#D1FAE5",
+    star: "#FEF3C7",
+    candy: "#FCE7F3"
+  }[element] || "#FCE7F3";
+
+  // Selection of CSS styling for micro-expression symbols and animations
+  const animationClass = isHungry ? "shiver-anim" : (isPlump ? "bounce-fat-anim" : "bounce-normal-anim");
+  const wingClass = "wing-breathe-anim";
+  const floatClass = "float-item-anim";
+
+  // -------------------------------------------------------------
+  // CSS DEFINITIONS (Embedded inside SVG to render beautifully inside IFrames)
+  // -------------------------------------------------------------
+  const svgCSS = `
+    @keyframes bounce-normal {
+      0%, 100% { transform: translateY(0) scale(1); }
+      50% { transform: translateY(-8px) scale(0.97, 1.03); }
     }
-    @keyframes sBreathe {
-      0%, 100% { transform: scale(1, 1); }
-      50% { transform: scale(1.06, 0.94); }
+    @keyframes bounce-fat {
+      0%, 100% { transform: translateY(0) scale(1, 0.98); }
+      50% { transform: translateY(-5px) scale(1.04, 0.95); }
     }
-    @keyframes shScale {
-      0%, 100% { transform: scaleX(1); opacity: 0.2; }
-      50% { transform: scaleX(0.75); opacity: 0.08; }
+    @keyframes shiver {
+      0%, 100% { transform: translate(0, 0); }
+      20% { transform: translate(-1px, 1px); }
+      40% { transform: translate(1px, -1px); }
+      60% { transform: translate(-1px, -1px); }
+      80% { transform: translate(1px, 1px); }
     }
-    @keyframes spUp {
-      0% { transform: translateY(0px) scale(1); opacity: 0; }
-      20% { opacity: 0.95; }
-      100% { transform: translateY(-30px) scale(0.3); opacity: 0; }
+    @keyframes shadow-scale {
+      0%, 100% { transform: scale(1); opacity: 0.2; }
+      50% { transform: scale(0.9); opacity: 0.12; }
     }
-    @keyframes spUpAlt {
-      0% { transform: translateY(0px) scale(0.8); opacity: 0; }
-      30% { opacity: 1; }
-      100% { transform: translateY(-35px) scale(0.15); opacity: 0; }
+    @keyframes float-slow {
+      0%, 100% { transform: translateY(0) rotate(0deg); }
+      50% { transform: translateY(-6px) rotate(2deg); }
     }
-    @keyframes wL {
+    @keyframes wing-flap {
       0%, 100% { transform: rotate(0deg); }
-      50% { transform: rotate(-5deg); }
+      50% { transform: rotate(6deg); }
     }
-    @keyframes wR {
-      0%, 100% { transform: rotate(0deg); }
-      50% { transform: rotate(5deg); }
+    @keyframes symbol-pulse {
+      0%, 100% { transform: scale(1); opacity: 0.8; }
+      50% { transform: scale(1.15); opacity: 1; }
     }
-    @keyframes sTiltShake {
-      0%, 100% { transform: rotate(0deg) translateY(0px); }
-      10%, 30%, 50% { transform: rotate(-4deg) translateY(-2px); }
-      20%, 40% { transform: rotate(4deg) translateY(2px); }
-      60% { transform: rotate(0deg) translateY(0px); }
-    }
-    .slime-shadow {
-      animation: shScale 4s ease-in-out infinite;
-      transform-origin: 128px 208px;
-    }
-       .slime-shadow {
-      animation: shScale 4s ease-in-out infinite;
-      transform-origin: center;
-    }
-    .float-grp {
-      animation: sFloat 4s ease-in-out infinite;
-      transform-origin: center;
-    }
-    .breathe-grp {
-      animation: sBreathe 3s ease-in-out infinite;
-      transform-origin: center;
-    }
-    .wiggle-l {
-      animation: wL 3s ease-in-out infinite;
-      transform-origin: left center;
-    }
-    .wiggle-r {
-      animation: wR 3s ease-in-out infinite;
-      transform-origin: right center;
-    }
-    .p-slow1 {
-      animation: spUp 3.2s linear infinite;
-      transform-origin: center;
-    }
-    .p-slow2 {
-      animation: spUpAlt 4s linear infinite;
-      transform-origin: center;
-    }
-    .hatch-shake {
-      animation: sTiltShake 2.5s ease-in-out infinite;
-      transform-origin: center;
-    }
-    .sad-shrink-grp {
-      transform: scale(0.85);
-      transform-origin: center;
-    }
-    @keyframes sGlow {
-      0%, 100% { filter: drop-shadow(0 0 2px #FBBF24) brightness(1); }
-      50% { filter: drop-shadow(0 0 10px #FBBF24) brightness(1.2); }
-    }
-    .excited-glow-grp {
-      animation: sGlow 2s ease-in-out infinite;
-    }
-    @keyframes sHop {
-      0%, 100% { transform: translateY(0px) scale(1, 1); }
-      25% { transform: translateY(-8px) scale(0.96, 1.04); }
-      50% { transform: translateY(0px) scale(1.04, 0.96); }
-      75% { transform: translateY(-4px) scale(0.99, 1.01); }
-    }
-    .happy-hop-grp {
-      animation: sHop 1.5s ease-in-out infinite;
-      transform-origin: center;
-    }
-    .tired-slow-grp .breathe-grp {
-      animation-duration: 6s !important;
-    }
-    @keyframes floatAura {
-      0%, 100% { opacity: 0.25; transform: scale(1); }
-      50% { opacity: 0.5; transform: scale(1.15); }
-    }
-    .aura {
-      animation: floatAura 3s ease-in-out infinite;
-    }
-    @keyframes orbitCompanion1 {
-      0% { transform: rotate(0deg) translateX(50px) rotate(0deg); }
-      100% { transform: rotate(360deg) translateX(50px) rotate(-360deg); }
-    }
-    @keyframes orbitCompanion2 {
-      0% { transform: rotate(120deg) translateX(50px) rotate(0deg); }
-      100% { transform: rotate(480deg) translateX(50px) rotate(-360deg); }
-    }
-    @keyframes orbitCompanion3 {
-      0% { transform: rotate(240deg) translateX(50px) rotate(0deg); }
-      100% { transform: rotate(600deg) translateX(50px) rotate(-360deg); }
-    }
-    .orbit1 { animation: orbitCompanion1 8s linear infinite; }
-    .orbit2 { animation: orbitCompanion2 8s linear infinite; }
-    .orbit3 { animation: orbitCompanion3 8s linear infinite; }
+    .bounce-normal-anim { animation: bounce-normal 2.2s ease-in-out infinite; transform-origin: center bottom; }
+    .bounce-fat-anim { animation: bounce-fat 2.8s ease-in-out infinite; transform-origin: center bottom; }
+    .shiver-anim { animation: shiver 0.3s ease-in-out infinite; transform-origin: center bottom; }
+    .shadow-scale-anim { animation: shadow-scale 2.2s ease-in-out infinite; transform-origin: center; }
+    .wing-breathe-anim { animation: wing-flap 2.2s ease-in-out infinite; transform-origin: center; }
+    .float-item-anim { animation: float-slow 3s ease-in-out infinite; }
+    .pulse-anim { animation: symbol-pulse 1.5s ease-in-out infinite; transform-origin: center; }
   `;
 
-  // --- RENDERING ROUTINE: EGG (Level 1 / egg未選) ---
-  if (isEgg) {
-    const eggBody: string[] = [];
-    const eggRows: { [key: number]: [number, number] } = {
-      8: [15, 16],
-      9: [14, 17],
-      10: [14, 17],
-      11: [13, 18],
-      12: [13, 18],
-      13: [12, 19],
-      14: [12, 19],
-      15: [11, 20],
-      16: [11, 20],
-      17: [10, 21],
-      18: [10, 21],
-      19: [9, 22],
-      20: [9, 22],
-      21: [9, 22],
-      22: [9, 22],
-      23: [10, 21],
-      24: [11, 20],
-      25: [12, 19]
-    };
-
-    // Draw bottom shadow - slightly wider for stable bottom
-    eggBody.push(`<ellipse cx="128" cy="208" rx="48" ry="10" fill="#000000" class="slime-shadow" />`);
-
-    // Top & Bottom border lines
-    for (let col = 15; col <= 16; col++) eggBody.push(px(col, 7, palette.border, "breathe-grp"));
-    for (let col = 12; col <= 19; col++) eggBody.push(px(col, 26, palette.border, "breathe-grp"));
-
-    // Egg contents with detailed cosmetic elements patterns
-    Object.entries(eggRows).forEach(([ystr, [l, r]]) => {
-      const y = Number(ystr);
-      eggBody.push(px(l - 1, y, palette.border, "breathe-grp"));
-      eggBody.push(px(r + 1, y, palette.border, "breathe-grp"));
-
-      for (let x = l; x <= r; x++) {
-        let col = palette.main;
-        if (y === 8) col = palette.light;
-        else if (x === l || x === l + 1) col = palette.light; 
-        else if (y >= 21 || x >= r - 1) col = palette.dark; 
-
-        // Gloss highlight reflection
-        if (x === l + 2 && (y === 10 || y === 11)) col = palette.shine;
-
-        // Custom Element Embryo patterns on the egg shell!
-        if (element === "forest") {
-          // Leafy sprout pattern
-          if ((x === 15 || x === 16) && y === 12) col = "#ffffff";
-          if ((x === 14 || x === 15 || x === 16 || x === 17) && (y === 14 || y === 15)) col = "#29AF4A";
-          if (x === 15 && y === 16) col = "#0F521F";
-        } else if (element === "magic") {
-          // Evil crescent / devil horns pattern
-          if ((x === 13 || x === 18) && (y === 13 || y === 14)) col = "#491C80";
-          if (x >= 15 && x <= 16 && y >= 15 && y <= 16) col = "#D4B3FF";
-        } else if (element === "crystal") {
-          // Sharp snowflake/crystal stars
-          if ((x === 15 || x === 16) && y === 15) col = "#FFFFFF";
-          if (((x === 13 || x === 18) && y === 13) || ((x === 14 || x === 17) && y === 17)) col = "#22D3EE";
-        } else if (element === "candy") {
-          // Heart emblem in middle of egg
-          if (((x === 14 || x === 17) && y === 14) || ((x === 15 || x === 16) && y === 15)) col = "#FFFFFF";
-          if (x >= 14 && x <= 17 && y >= 13 && y <= 16) col = "#FDA4AF";
-        } else if (element === "star") {
-          // Glowing star and sparkle markings
-          if ((x === 15 || x === 16) && y === 14) col = "#FDE047";
-          if ((x === 14 || x === 17) && y === 15) col = "#FDE047";
-          if (x === 15 && y === 16) col = "#FFFFFF";
-        }
-
-        eggBody.push(px(x, y, col, "breathe-grp"));
-      }
-    });
-
+  // -------------------------------------------------------------
+  // EGG RENDERERS (Lvl 1 - Lvl 3)
+  // -------------------------------------------------------------
+  if (level <= 3) {
+    const isCracked = level === 3;
     return `
-      <svg viewBox="0 0 256 256" xmlns="http://www.w3.org/2000/svg" style="width: 100%; height: 100%;">
-        <style>${css}</style>
-        ${eggBody.join("")}
-      </svg>
-    `;
-  }
-
-  // --- RENDERING ROUTINE: CRACKED EGG (Level 2) ---
-  if (isCrackedEgg) {
-    const crackedBody: string[] = [];
-    const eggRows: { [key: number]: [number, number] } = {
-      8: [15, 16],
-      9: [14, 17],
-      10: [14, 17],
-      11: [13, 18],
-      12: [13, 18],
-      13: [12, 19],
-      14: [12, 19],
-      15: [11, 20],
-      16: [11, 20],
-      17: [10, 21],
-      18: [10, 21],
-      19: [9, 22],
-      20: [9, 22],
-      21: [9, 22],
-      22: [9, 22],
-      23: [10, 21],
-      24: [11, 20],
-      25: [12, 19]
-    };
-
-    // Draw bottom shadow - slightly wider for stable bottom
-    crackedBody.push(`<ellipse cx="128" cy="208" rx="48" ry="10" fill="#000000" class="slime-shadow" />`);
-
-    // We build the egg shell split into top, middle baby reveal gap, and bottom
-    const topShell: string[] = [];
-    const babyReveal: string[] = [];
-    const bottomShell: string[] = [];
-
-    // Top cap border lines
-    for (let col = 15; col <= 16; col++) topShell.push(px(col, 7, palette.border));
-    // Bottom cap border lines
-    for (let col = 12; col <= 19; col++) bottomShell.push(px(col, 26, palette.border));
-
-    Object.entries(eggRows).forEach(([ystr, [l, r]]) => {
-      const y = Number(ystr);
-
-      // 1. Top Shell (y <= 13)
-      if (y <= 12) {
-        topShell.push(px(l - 1, y, palette.border));
-        topShell.push(px(r + 1, y, palette.border));
-        // Add zigzag cracks at the lower end of the top shell
-        const isCrackRow = y === 12;
-
-        for (let x = l; x <= r; x++) {
-          let col = palette.main;
-          if (y === 8) col = palette.light;
-          else if (x === l || x === l + 1) col = palette.light;
-          else if (y >= 21 || x >= r - 1) col = palette.dark;
-          if (x === l + 2 && (y === 10 || y === 11)) col = palette.shine;
-
-          if (isCrackRow && (x === 14 || x === 15 || x === 17 || x === 18)) {
-            col = palette.border; // Crack outline
-          }
-          topShell.push(px(x, y, col));
-        }
-      }
-      // 2. Middle Row Gaps (y = 13 ~ y = 17) hatching reveal baby slime inside!
-      else if (y >= 13 && y <= 17) {
-        // Transparent side boundaries, jagged border
-        babyReveal.push(px(l - 1, y, palette.border));
-        babyReveal.push(px(r + 1, y, palette.border));
-
-        for (let x = l; x <= r; x++) {
-          // If at the jagged edge, render cracked white/cream shell pieces
-          const isShellLeft = (x <= l + 2 - (y % 2)) || (x === l + 1);
-          const isShellRight = (x >= r - 2 + (y % 2)) || (x === r - 1);
+      <svg viewBox="0 0 256 256" xmlns="http://www.w3.org/2000/svg" style="width:100%; height:100%;">
+        <style>${svgCSS}</style>
+        <defs>
+          <radialGradient id="eggGrad" cx="35%" cy="30%" r="65%">
+            <stop offset="0%" stop-color="${gradStart}"/>
+            <stop offset="70%" stop-color="${gradEnd}"/>
+            <stop offset="100%" stop-color="${outlineColor}"/>
+          </radialGradient>
+        </defs>
+        
+        <!-- Ground Shadow -->
+        <ellipse cx="128" cy="208" rx="42" ry="8" fill="rgba(0,0,0,0.15)"/>
+        
+        <!-- Egg Body Group with soft float -->
+        <g class="${floatClass}" style="transform-origin: center 150px;">
+          <!-- Main Egg Shape -->
+          <path d="M 128,65 C 85,65 72,130 72,165 C 72,200 97,210 128,210 C 159,210 184,200 184,165 C 184,130 171,65 128,65 Z" 
+                fill="url(#eggGrad)" stroke="${outlineColor}" stroke-width="6" stroke-linejoin="round"/>
           
-          if (isShellLeft || isShellRight) {
-            let col = palette.main;
-            if (x === l || x === l + 1) col = palette.light;
-            else if (x >= r - 1) col = palette.dark;
-            // Draw cracks
-            if ((y === 14 && x === l + 2) || (y === 16 && x === r - 2)) {
-              col = palette.border;
-            }
-            babyReveal.push(px(x, y, col));
-          } else {
-            // Peek at baby slime body color inside!
-            let col = palette.horn; 
-            // In the gap center, show cute eyes blinking/looking out!
-            if (y === 15) {
-              if (x === 14 || x === 17) {
-                col = "#1C1032"; // baby eyes
-              } else if (x === 15 || x === 16) {
-                col = palette.hornLight;
-              }
-            } else if (y === 16 && x === 15) {
-              col = "#FF75A9"; // little pink mouth peeking out
-            }
-            babyReveal.push(px(x, y, col));
-          }
-        }
-      }
-      // 3. Bottom Shell (y >= 18)
-      else {
-        bottomShell.push(px(l - 1, y, palette.border));
-        bottomShell.push(px(r + 1, y, palette.border));
-
-        for (let x = l; x <= r; x++) {
-          let col = palette.main;
-          if (x === l || x === l + 1) col = palette.light;
-          else if (y >= 21 || x >= r - 1) col = palette.dark;
-
-          // Draw rising cracks on bottom shell
-          if (y === 18 && (x === 12 || x === 15 || x === 18)) {
-            col = palette.border;
-          }
-          if (y === 19 && (x === 13 || x === 17)) {
-            col = palette.border;
-          }
-          bottomShell.push(px(x, y, col));
-        }
-      }
-    });
-
-    return `
-      <svg viewBox="0 0 256 256" xmlns="http://www.w3.org/2000/svg" style="style="width: 100%; height: 100%;" width: 100%; height: 100%;">
-        <style>${css}</style>
-        <!-- The top half wiggles/shakes, giving hatching vibes! -->
-        <g class="hatch-shake">
-          ${topShell.join("")}
-        </g>
-        <!-- Static Middle baby reveal -->
-        <g class="breathe-grp">
-          ${babyReveal.join("")}
-        </g>
-        <!-- Bottom stable base shell -->
-        <g class="breathe-grp">
-          ${bottomShell.join("")}
+          <!-- Egg Decorative Ribbon Stripe -->
+          <path d="M 73,155 Q 128,180 183,155 Q 128,190 73,155" fill="${particleColor}" opacity="0.8"/>
+          
+          ${isCracked ? `
+            <!-- Cracked lines showing slime eyes peeking -->
+            <path d="M 105,145 L 120,135 L 132,143 L 148,133 L 157,144" fill="none" stroke="${outlineColor}" stroke-width="4" stroke-linecap="round"/>
+            <path d="M 105,145 L 115,155 L 130,147 L 145,156 L 157,144" fill="none" stroke="${outlineColor}" stroke-width="4" stroke-linecap="round"/>
+            
+            <!-- Peeking glowing Eyes -->
+            <circle cx="122" cy="144" r="5" fill="#FFFFFF"/>
+            <circle cx="122" cy="144" r="2.5" fill="#000000"/>
+            <circle cx="138" cy="144" r="5" fill="#FFFFFF"/>
+            <circle cx="138" cy="144" r="2.5" fill="#000000"/>
+          ` : `
+            <!-- Speckle details on non-cracked egg -->
+            <circle cx="102" cy="115" r="4" fill="${particleColor}" opacity="0.6"/>
+            <circle cx="148" cy="100" r="5" fill="${particleColor}" opacity="0.6"/>
+            <circle cx="152" cy="150" r="3" fill="${particleColor}" opacity="0.6"/>
+          `}
+          
+          <!-- Cute Shell Glistening Spot -->
+          <ellipse cx="106" cy="100" rx="6" ry="12" fill="#FFFFFF" opacity="0.3" transform="rotate(-15 106 100)"/>
         </g>
       </svg>
     `;
   }
 
-  // --- RENDERING ROUTINE: EVOLVING SLIME (Level 3+) ---
-  // Size ranges: index 0 (Lv3), 1 (Lv4-7), 2 (Lv8-10: 初階進化), 3 (Lv11-15: 中階進化), 4 (Lv16+: 最終進化)
-  const sizeIdx = level <= 3 ? 0 : level <= 7 ? 1 : level <= 10 ? 2 : level <= 15 ? 3 : 4;
+  // -------------------------------------------------------------
+  // SLIME RENDERER (Lvl 4+)
+  // -------------------------------------------------------------
 
-  const BODY_PROFILES = [
-    // Size 0 (Lv 3): Y_start = 17, Height = 9. Small baby.
-    {
-      Y_start: 17,
-      rows: {
-        17: [13, 18],
-        18: [11, 20],
-        19: [10, 21],
-        20: [9, 22],
-        21: [9, 22],
-        22: [9, 22],
-        23: [9, 22],
-        24: [9, 22],
-        25: [10, 21]
-      }
-    },
-    // Size 1 (Lv 4-7): Y_start = 15, Height = 11. Kid.
-    {
-      Y_start: 15,
-      rows: {
-        15: [12, 19],
-        16: [10, 21],
-        17: [9, 22],
-        18: [8, 23],
-        19: [8, 23],
-        20: [7, 24],
-        21: [7, 24],
-        22: [7, 24],
-        23: [7, 24],
-        24: [7, 24],
-        25: [8, 23]
-      }
-    },
-    // Size 2 (Lv 8-12): Y_start = 13, Height = 13. Budding youth.
-    {
-      Y_start: 13,
-      rows: {
-        13: [12, 19],
-        14: [10, 21],
-        15: [8, 23],
-        16: [7, 24],
-        17: [6, 25],
-        18: [6, 25],
-        19: [5, 26],
-        20: [3, 28], // slightly chunkier sides
-        21: [3, 28],
-        22: [5, 26],
-        23: [5, 26],
-        24: [5, 26],
-        25: [6, 25]
-      }
-    },
-    // Size 3 (Lv 13-16): Y_start = 11, Height = 15. Active hero.
-    {
-      Y_start: 11,
-      rows: {
-        11: [11, 20],
-        12: [10, 21],
-        13: [8, 23],
-        14: [7, 24],
-        15: [6, 25],
-        16: [5, 26],
-        17: [4, 27],
-        18: [4, 27],
-        19: [3, 28],
-        20: [3, 28],
-        21: [3, 28],
-        22: [3, 28],
-        23: [3, 28],
-        24: [3, 28],
-        25: [4, 27]
-      }
-    },
-    // Size 4 (Lv 17-20): Y_start = 9, Height = 17. Apex Legend.
-    {
-      Y_start: 9,
-      rows: {
-        9: [11, 20],
-        10: [10, 21],
-        11: [8, 23],
-        12: [7, 24],
-        13: [6, 25],
-        14: [5, 26],
-        15: [4, 27],
-        16: [3, 28],
-        17: [2, 29],
-        18: [2, 29],
-        19: [2, 29],
-        20: [2, 29],
-        21: [2, 29],
-        22: [2, 29],
-        23: [2, 29],
-        24: [2, 29],
-        25: [3, 28]
-      }
-    }
-  ];
+  // Dimensions & Paths customized for Satiety
+  let bodyPath = "";
+  let shadowRx = 65;
+  let shadowRy = 12;
 
-  const profile = BODY_PROFILES[sizeIdx];
-  const ys = profile.Y_start;
-  const H = 25 - ys + 1;
-
-  const backgroundLayer: string[] = [];
-  const midgroundLayer: string[] = [];
-  const faceLayer: string[] = [];
-  const foregroundLayer: string[] = [];
-
-  // Ground shadow oval
-  const shadowRx = 38 + sizeIdx * 8;
-  midgroundLayer.push(`<ellipse cx="128" cy="208" rx="${shadowRx}" ry="10" fill="#000000" class="slime-shadow" />`);
-
-  // Symmetric helper function
-  const addSymmetricAcc = (c: number, r: number, col: string, isBack = false, isWiggling = true) => {
-    const clsL = isWiggling ? "wiggle-l" : "breathe-grp";
-    const clsR = isWiggling ? "wiggle-r" : "breathe-grp";
-    if (isBack) {
-      backgroundLayer.push(px(c, r, col, clsL));
-      backgroundLayer.push(px(31 - c, r, col, clsR));
-    } else {
-      foregroundLayer.push(px(c, r, col, clsL));
-      foregroundLayer.push(px(31 - c, r, col, clsR));
-    }
-  };
-
-  const addSymmetricWing = (c: number, r: number, col: string) => {
-    backgroundLayer.push(px(c, r, col, "wing-l"));
-    backgroundLayer.push(px(31 - c, r, col, "wing-r"));
-  };
-
-  // --- 3. WINGS DEFINITION (Bigger and cleaner!) ---
-  if (sizeIdx === 3) {
-    // Elegant angle wings
-    const wingPixels = [
-      [5, 14], [4, 13], [3, 12], [2, 13], [3, 14], [4, 15], [5, 16],
-      [1, 13], [2, 14], [3, 15]
-    ];
-    wingPixels.forEach(([cx, cy]) => {
-      addSymmetricWing(cx, cy, palette.border);
-      addSymmetricWing(cx + 1, cy, palette.dark);
-    });
-  } else if (sizeIdx === 4) {
-    // GLORIOUS LARGE WINGS FOR APEX STAGE (Level 17-20)
-    const wingPixels = [
-      [6, 11], [5, 10], [4, 9], [3, 8], [2, 7], [1, 7], [0, 8], [-1, 9],
-      [0, 10], [1, 11], [2, 12], [3, 13], [4, 14], [5, 15], [6, 16],
-      [3, 10], [4, 10], [2, 11], [3, 11], [4, 11], [5, 11]
-    ];
-    wingPixels.forEach(([cx, cy]) => {
-      // Offset clipping column boundaries safely inside viewport (>=0)
-      const adjustedCx = Math.max(0, cx);
-      addSymmetricWing(adjustedCx, cy, palette.border);
-      addSymmetricWing(adjustedCx + 1, cy, element === "star" ? "#E28500" : palette.horn);
-      addSymmetricWing(adjustedCx + 2, cy + 1, element === "crystal" ? "#ffffff" : palette.light);
-    });
-  }
-
-  // --- 4. ELEMENT STYLING (Horns, Tails & Custom Accessories) ---
-  if (element === "magic") {
-    // === Purple Demon (魔王系) ===
-    // Demonic tail in background
-    if (sizeIdx >= 2) {
-      backgroundLayer.push(px(8, 23, palette.border, "wiggle-l"));
-      backgroundLayer.push(px(7, 22, palette.border, "wiggle-l"));
-      backgroundLayer.push(px(6, 23, palette.horn, "wiggle-l"));
-      backgroundLayer.push(px(6, 24, palette.horn, "wiggle-l"));
-      backgroundLayer.push(px(5, 23, palette.border, "wiggle-l")); // tail arrow
-    }
-
-    if (sizeIdx === 1) {
-      [[11, 13], [12, 14]].forEach(([cx, cy]) => addSymmetricAcc(cx, cy, palette.horn));
-      addSymmetricAcc(11, 14, palette.border);
-    } else if (sizeIdx === 2) {
-      // LV 8-10: 雙角變大 (Horns become larger, purple energy pattern)
-      [[10, 10], [9, 9], [8, 8]].forEach(([cx, cy]) => addSymmetricAcc(cx, cy, palette.border));
-      [[11, 10], [10, 9], [9, 8]].forEach(([cx, cy]) => addSymmetricAcc(cx, cy, palette.horn));
-      addSymmetricAcc(11, 9, palette.hornLight);
-    } else if (sizeIdx === 3) {
-      // LV 11-15: 浮空魔法符文 (Floating magic runes) & 深紫披風感外型 (cape-like backing)
-      // Floating runes flanking
-      const l_bound = profile.rows[ys][0];
-      const r_bound = profile.rows[ys][1];
-      backgroundLayer.push(px(l_bound - 4, ys + 4, "#BB99FF", "float-grp"));
-      backgroundLayer.push(px(l_bound - 3, ys + 5, "#D4B3FF", "float-grp"));
-      backgroundLayer.push(px(r_bound + 4, ys + 4, "#BB99FF", "float-grp"));
-      backgroundLayer.push(px(r_bound + 3, ys + 5, "#D4B3FF", "float-grp"));
-      // Dark cape panel outlines flanking base
-      backgroundLayer.push(px(l_bound - 2, 23, "#491C80", "breathe-grp"));
-      backgroundLayer.push(px(l_bound - 3, 24, "#1C1032", "breathe-grp"));
-      backgroundLayer.push(px(r_bound + 2, 23, "#491C80", "breathe-grp"));
-      backgroundLayer.push(px(r_bound + 3, 24, "#1C1032", "breathe-grp"));
-
-      // Big curved horns
-      [[10, 8], [9, 7], [8, 6], [7, 7], [6, 8]].forEach(([cx, cy]) => addSymmetricAcc(cx, cy, palette.border));
-      [[11, 8], [10, 7], [9, 6], [8, 7], [7, 8]].forEach(([cx, cy]) => addSymmetricAcc(cx, cy, palette.horn));
-    } else if (sizeIdx === 4) {
-      // LV 16+: 巨大惡魔角 (Huge horns), 漂浮暗紫火焰 (Dark purple glow), 魔王皇冠 (Demon Crown), 小型翅膀 (Dragon wings)
-      // Dragon/bat wings on sides
-      addSymmetricWing(5, 11, "#1C1032");
-      addSymmetricWing(4, 10, "#491C80");
-      addSymmetricWing(3, 9, "#8A4FFF");
-      addSymmetricWing(3, 10, "#491C80");
-      addSymmetricWing(4, 11, "#1C1032");
-
-      // Spooky rising embers/flames
-      const l_bound = profile.rows[ys][0];
-      const r_bound = profile.rows[ys][1];
-      backgroundLayer.push(px(l_bound - 4, ys + 1, "#8A4FFF", "p-slow1"));
-      backgroundLayer.push(px(r_bound + 4, ys, "#8A4FFF", "p-slow2"));
-
-      // Huge devil horns
-      [[9, 6], [8, 5], [7, 4], [6, 4], [5, 5], [4, 6]].forEach(([cx, cy]) => {
-        addSymmetricAcc(cx, cy, palette.border);
-        addSymmetricAcc(cx + 1, cy, palette.horn);
-        addSymmetricAcc(cx + 2, cy + 1, palette.hornLight);
-      });
-    }
-  } else if (element === "crystal") {
-    // === Ice Blue Slime (聖獸／獨角獸系) ===
-    if (sizeIdx >= 2) {
-      // Blade icicles sticking out of the sides of the body
-      const sideL = profile.rows[18][0];
-      const sideR = profile.rows[18][1];
-      backgroundLayer.push(px(sideL - 2, 18, palette.horn, "wiggle-l"));
-      backgroundLayer.push(px(sideL - 3, 18, "#ffffff", "wiggle-l"));
-      backgroundLayer.push(px(sideR + 2, 18, palette.horn, "wiggle-r"));
-      backgroundLayer.push(px(sideR + 3, 18, "#ffffff", "wiggle-r"));
-    }
-
-    if (sizeIdx === 1) {
-      [[15, 12], [16, 12], [15, 13], [16, 13], [15, 14], [16, 14]].forEach(([cx, cy]) => {
-        foregroundLayer.push(px(cx, cy, palette.horn, "breathe-grp"));
-      });
-    } else if (sizeIdx === 2) {
-      // LV 8-10: 獨角開始發光 (Glow sparkle on horn tip)
-      [[15, 9], [16, 9], [15, 10], [16, 10], [15, 11], [16, 11]].forEach(([cx, cy]) => {
-        foregroundLayer.push(px(cx, cy, "#ffffff", "breathe-grp"));
-      });
-      // Sparkle cross on tip
-      foregroundLayer.push(px(15, 7, "#FFFFFF", "float-grp"));
-      foregroundLayer.push(px(16, 7, "#FFFFFF", "float-grp"));
-      foregroundLayer.push(px(14, 8, "#A6E8FF", "float-grp"));
-      foregroundLayer.push(px(17, 8, "#A6E8FF", "float-grp"));
-    } else if (sizeIdx === 3) {
-      // LV 11-15: 冰晶裝飾 (Ice crystal crest) & 雪花特效 (Floating snowflake particles)
-      [[15, 7], [16, 7], [15, 8], [16, 8], [14, 8], [17, 8]].forEach(([cx, cy]) => {
-        foregroundLayer.push(px(cx, cy, "#ffffff", "breathe-grp"));
-      });
-      [[15, 9], [16, 9], [14, 9], [17, 9]].forEach(([cx, cy]) => {
-        foregroundLayer.push(px(cx, cy, "#00E5FF", "breathe-grp"));
-      });
-      // Snowflake details flanking
-      const l_bound = profile.rows[ys][0];
-      const r_bound = profile.rows[ys][1];
-      backgroundLayer.push(px(l_bound - 3, ys + 2, "#E0F7FA", "p-slow1"));
-      backgroundLayer.push(px(r_bound + 3, ys + 3, "#E0F7FA", "p-slow2"));
-    } else if (sizeIdx === 4) {
-      // LV 16+: 大型水晶角 (Huge crystal horn), 冰晶翅膀 (Ice wings), 光環 (Holy halo), 冰雪粒子
-      // Ice crystal wings flanking
-      addSymmetricWing(5, 11, "#B2EBF2");
-      addSymmetricWing(4, 10, "#00E5FF");
-      addSymmetricWing(3, 9, "#FFFFFF");
-
-      // Glistening single crown horn
-      [[15, 3], [16, 3], [15, 4], [16, 4], [15, 5], [16, 5], [14, 5], [17, 5]].forEach(([cx, cy]) => {
-        foregroundLayer.push(px(cx, cy, "#FFFFFF", "breathe-grp"));
-      });
-      [[15, 6], [16, 6], [14, 6], [17, 6], [13, 7], [18, 7]].forEach(([cx, cy]) => {
-        foregroundLayer.push(px(cx, cy, "#00B0FF", "breathe-grp"));
-      });
-    }
-  } else if (element === "candy") {
-    // === Pink Slime (精靈兔系) ===
-    if (sizeIdx >= 2) {
-      // Fluffy rabbit tail back
-      backgroundLayer.push(px(21, 23, "#FFB8D3", "wiggle-r"));
-      backgroundLayer.push(px(22, 23, "#FF75A9", "wiggle-r"));
-    }
-
-    if (sizeIdx === 1) {
-      [[11, 12], [10, 11], [11, 10]].forEach(([cx, cy]) => addSymmetricAcc(cx, cy, palette.border));
-      [[12, 12], [11, 11]].forEach(([cx, cy]) => addSymmetricAcc(cx, cy, palette.horn));
-    } else if (sizeIdx === 2) {
-      // LV 8-10: 兔耳變長 (Rabbit ears grow longer)
-      [[10, 9], [9, 8], [9, 7], [10, 6], [11, 7], [11, 8]].forEach(([cx, cy]) => addSymmetricAcc(cx, cy, palette.border));
-      [[10, 7], [10, 8]].forEach(([cx, cy]) => addSymmetricAcc(cx, cy, "#ffffff")); // white inner lining
-    } else if (sizeIdx === 3) {
-      // LV 11-15: 花朵裝飾 (Flower headpiece) / 星星特效 (Sparkles around ears)
-      [[9, 7], [8, 6], [8, 5], [9, 4], [10, 5], [11, 6]].forEach(([cx, cy]) => addSymmetricAcc(cx, cy, palette.border));
-      [[9, 5], [9, 6]].forEach(([cx, cy]) => addSymmetricAcc(cx, cy, "#FFD67D")); // gold inner lining
-      
-      // Star particles around ears
-      const l_bound = profile.rows[ys][0];
-      const r_bound = profile.rows[ys][1];
-      backgroundLayer.push(px(l_bound - 3, ys, "#FFF9C4", "p-slow1"));
-      backgroundLayer.push(px(r_bound + 3, ys - 1, "#FFF9C4", "p-slow2"));
-    } else if (sizeIdx === 4) {
-      // LV 16+: 巨大兔耳 (Giant ears), 精靈光圈 (Elven halo), 愛心粒子, 花冠 (Flower Crown)
-      // Giant fluffy royal bunny ears
-      const l_bound_sub = profile.rows[ys][0];
-      const r_bound_sub = profile.rows[ys][1];
-      [[8, 5], [7, 4], [7, 3], [8, 2], [9, 3], [10, 4]].forEach(([cx, cy]) => addSymmetricAcc(cx, cy, palette.border));
-      [[8, 3], [8, 4], [9, 4]].forEach(([cx, cy]) => addSymmetricAcc(cx, cy, "#FF85A5")); // deep pink inner fluff
-
-      // Heart particles rising
-      backgroundLayer.push(px(l_bound_sub - 4, ys + 2, "#FF4081", "p-slow1"));
-      backgroundLayer.push(px(r_bound_sub + 4, ys + 1, "#FF4081", "p-slow2"));
-    }
-  } else if (element === "forest") {
-    // === Green Slime (森林守護者) ===
-    if (sizeIdx === 1) {
-      [[15, 13], [16, 13], [14, 12], [17, 12]].forEach(([cx, cy]) => foregroundLayer.push(px(cx, cy, palette.horn, "breathe-grp")));
-    } else if (sizeIdx === 2) {
-      // LV 8-10: 葉片增多 (Foliage crown counts double)
-      [[15, 11], [16, 11], [14, 10], [17, 10], [13, 11], [18, 11]].forEach(([cx, cy]) => {
-        foregroundLayer.push(px(cx, cy, "#4FE075", "breathe-grp"));
-      });
-      [[15, 10], [16, 10]].forEach(([cx, cy]) => foregroundLayer.push(px(cx, cy, palette.border, "breathe-grp")));
-    } else if (sizeIdx === 3) {
-      // LV 11-15: 藤蔓裝飾 & 小花生成 (blooms on head)
-      [[15, 9], [16, 9], [13, 8], [18, 8], [14, 9], [17, 9]].forEach(([cx, cy]) => {
-        foregroundLayer.push(px(cx, cy, "#1C9E40", "breathe-grp"));
-      });
-      // Little rose flower buds on crown
-      foregroundLayer.push(px(14, 7, "#E91E63", "breathe-grp"));
-      foregroundLayer.push(px(17, 7, "#E91E63", "breathe-grp"));
-    } else if (sizeIdx === 4) {
-      // LV 16+: 樹冠造型 (Leafy oak helmet), 森林光點 (firefly sparks), 守護者頭冠, 葉片披肩 (Leaf shoulder wraps)
-      // Leaves cape wings back
-      addSymmetricWing(5, 12, "#1B5E20");
-      addSymmetricWing(4, 11, "#4CAF50");
-
-      // Giant oak-canopy crown
-      [[15, 6], [16, 6], [13, 5], [18, 5], [12, 6], [19, 6], [14, 5], [17, 5]].forEach(([cx, cy]) => {
-         foregroundLayer.push(px(cx, cy, "#388E3C", "breathe-grp"));
-      });
-      // Guardian gold crest center
-      foregroundLayer.push(px(15, 4, "#FFA000", "breathe-grp"));
-      foregroundLayer.push(px(16, 4, "#FFA000", "breathe-grp"));
-
-      // Falling glowing pollen / fireflies
-      const l_bound = profile.rows[ys][0];
-      const r_bound = profile.rows[ys][1];
-      backgroundLayer.push(px(l_bound - 4, ys + 1, "#CCFF90", "p-slow1"));
-      backgroundLayer.push(px(r_bound + 4, ys, "#CCFF90", "p-slow2"));
-    }
-  } else if (element === "star") {
-    // === Honey Yellow-Orange Slime (聖騎士／王者系) ===
-    if (sizeIdx === 1) {
-      [[11, 13], [10, 12]].forEach(([cx, cy]) => addSymmetricAcc(cx, cy, palette.border));
-      addSymmetricAcc(11, 12, palette.horn);
-    } else if (sizeIdx === 2) {
-      // LV 8-10: 金屬角變長 (Metallic horn gets longer/sharper)
-      [[15, 9], [16, 9], [15, 10], [16, 10], [15, 11], [16, 11]].forEach(([cx, cy]) => {
-        foregroundLayer.push(px(cx, cy, "#FFE082", "breathe-grp")); // gold metallic spike
-      });
-      foregroundLayer.push(px(15, 8, "#FFFFFF", "float-grp")); 
-    } else if (sizeIdx === 3) {
-      // LV 11-15: 金色護甲紋路 (Golden polished accents)
-      [[15, 7], [16, 7], [15, 8], [16, 8], [14, 9], [17, 9]].forEach(([cx, cy]) => {
-        foregroundLayer.push(px(cx, cy, "#FFA000", "breathe-grp"));
-      });
-    } else if (sizeIdx === 4) {
-      // LV 16+: 聖王者王冠, 大型天使羽翼 (Large golden wings), 金色光環 (Golden glowing halo), 榮耀粒子
-      // Angel wings flanking
-      addSymmetricWing(5, 12, "#E65100");
-      addSymmetricWing(4, 11, "#FFB300");
-      addSymmetricWing(3, 10, "#FFF59D");
-
-      // King's solid royal crown
-      [[15, 4], [16, 4], [14, 5], [17, 5], [13, 6], [18, 6]].forEach(([cx, cy]) => {
-        foregroundLayer.push(px(cx, cy, "#FF8F00", "breathe-grp"));
-      });
-      // Gem point
-      foregroundLayer.push(px(15, 3, "#D50000", "float-grp"));
-      foregroundLayer.push(px(16, 3, "#D50000", "float-grp"));
-
-      // Radiant sparkles rising
-      const l_bound = profile.rows[ys][0];
-      const r_bound = profile.rows[ys][1];
-      backgroundLayer.push(px(l_bound - 4, ys + 2, "#FFEE58", "p-slow1"));
-      backgroundLayer.push(px(r_bound + 4, ys + 1, "#FFEE58", "p-slow2"));
-    }
-  }
-
-  // --- 5. ULTRA MAGNIFICENT HALO & CROWN (Level 17-20 / sizeIdx === 4) ---
-  if (sizeIdx === 4) {
-    // 1. Glistening Arched Halo floating above
-    const haloPixels = [
-      [11, ys - 4], [12, ys - 5], [13, ys - 5], [14, ys - 6], [15, ys - 6],
-      [16, ys - 6], [17, ys - 6], [18, ys - 5], [19, ys - 5], [20, ys - 4]
-    ];
-    haloPixels.forEach(([hx, hy]) => {
-      foregroundLayer.push(px(hx, hy, "#FFF275", "float-grp"));
-      foregroundLayer.push(px(31 - hx, hy, "#FFF275", "float-grp"));
-    });
-
-    // 2. Large and ultra-luxurious golden crown (spikes & ruby jewel center)
-    const crownY = ys - 2;
-    for (let col = 12; col <= 19; col++) {
-      foregroundLayer.push(px(col, crownY, "#C36400", "breathe-grp"));
-      foregroundLayer.push(px(col, crownY - 1, "#FFAC1C", "breathe-grp"));
-    }
-    [[12, crownY - 2], [14, crownY - 2], [15, crownY - 3], [16, crownY - 3], [17, crownY - 2], [19, crownY - 2]].forEach(([cx, cy]) => {
-      foregroundLayer.push(px(cx, cy, "#FFD67D", "breathe-grp"));
-      foregroundLayer.push(px(cx, cy - 1, "#FFFFFF", "breathe-grp")); 
-    });
-
-    // Center gemstone based on element
-    const gemColor = {
-      magic: "#A855F7",
-      crystal: "#3B82F6",
-      forest: "#10B981",
-      star: "#F43F5E",
-      candy: "#EC4899"
-    }[element] || "#EC4899";
-    foregroundLayer.push(px(15, crownY - 1, gemColor, "breathe-grp"));
-    foregroundLayer.push(px(16, crownY - 1, gemColor, "breathe-grp"));
-  }
-
-  // --- 6. BODY ROW-BY-ROW GRAPHICS GENERATION ---
-  // Top capping border
-  const topL = profile.rows[ys][0];
-  const topR = profile.rows[ys][1];
-  for (let col = topL; col <= topR; col++) {
-    midgroundLayer.push(px(col, ys - 1, palette.border, "breathe-grp"));
-  }
-
-  // Bottom capping border
-  const botL = profile.rows[25][0];
-  const botR = profile.rows[25][1];
-  for (let col = botL; col <= botR; col++) {
-    midgroundLayer.push(px(col, 26, palette.border, "breathe-grp"));
-  }
-
-  // Main Slime body matrix loop
-  Object.entries(profile.rows).forEach(([ystr, [l, r]]) => {
-    const y = Number(ystr);
-
-    // Left outer and right outer borders
-    midgroundLayer.push(px(l - 1, y, palette.border, "breathe-grp"));
-    midgroundLayer.push(px(r + 1, y, palette.border, "breathe-grp"));
-
-    for (let x = l; x <= r; x++) {
-      let col = palette.main;
-
-      // Volumetric shading & Edge glow highlights
-      if (y === ys) {
-        col = palette.light;
-      } else if (x === l || x === l + 1) {
-        col = palette.light; 
-      } else if (y >= 25 - Math.floor(H * 0.42) || x >= r - 1) {
-        col = palette.dark; 
-      }
-
-      const isLossOfLuster = expr === "sad";
-
-      // Glass shine spot in top-left
-      if (!isLossOfLuster) {
-        if (x === l + 2 && (y === ys + 1 || y === ys + 2)) {
-          col = palette.shine;
-        }
-        if (x === l + 3 && y === ys + 1) {
-          col = palette.shine;
-        }
-      }
-
-      // --- High-Level level >= 8 Custom Volumetric & Emblem Patterns ---
-      if (level >= 8) {
-        const cx_mid = Math.floor((l + r) / 2);
-        const cy_mid = ys + Math.floor(H / 2);
-
-        // Extra high-contrast shines
-        if (!isLossOfLuster) {
-          if (x === l + 4 && y === ys + 1) col = palette.shine;
-          if (x === l + 3 && y === ys + 2) col = palette.shine;
-        }
-
-        // Extra deep shadow core at the base right side
-        if (y >= 24 && x >= r - 2) {
-          col = palette.border; 
-        }
-
-        // --- Custom Chest Emblems/Patterns for Distinctive Silhouettes & Identification ---
-        if (element === "magic") {
-          // Purple Demon glowing core streaks
-          if ((x === cx_mid - 2 && y === cy_mid + 2) || (x === cx_mid - 1 && y === cy_mid + 3) ||
-              (x === cx_mid + 1 && y === cy_mid + 1) || (x === cx_mid + 2 && y === cy_mid + 2)) {
-            col = "#D4B3FF"; // Neon purple/lavender glow accent
-          }
-        } else if (element === "forest" && level >= 11) {
-          // Green Ivy vine patterns winding around body
-          if (y === cy_mid + 1 && (x >= l + 2 && x <= r - 2)) {
-            col = "#1B5E20"; // Dark vine wrap stripe
-          }
-          if (y === cy_mid + 2 && x === l + 3) {
-            col = "#1B5E20";
-          }
-          // Small rose pink flower blossoms on chest
-          if (x === cx_mid + 3 && y === cy_mid - 1) {
-            col = "#FF85A5"; // Pink petal
-          }
-          if (x === cx_mid + 3 && y === cy_mid - 2) {
-            col = "#FF4081"; // Red center
-          }
-        } else if (element === "star" && level >= 11) {
-          // Golden Knight Breastplate / armor markings
-          if (x === cx_mid && (y >= cy_mid + 1 && y <= cy_mid + 3)) {
-            col = "#FFF59D"; // Gleaming golden strip
-          }
-          if (y === cy_mid + 2 && (x >= cx_mid - 1 && x <= cx_mid + 1)) {
-            col = "#FFF59D"; // Cross bar armor segment
-          }
-        } else if (element === "crystal" && level >= 11) {
-          // Frozen Ice crystal shard embedded on chest
-          if ((x === cx_mid && y === cy_mid + 1) || (x === cx_mid && y === cy_mid + 3) ||
-              (x === cx_mid - 1 && y === cy_mid + 2) || (x === cx_mid + 1 && y === cy_mid + 2)) {
-            col = "#FFFFFF"; // Snow crystal white reflecting
-          }
-          if (x === cx_mid && y === cy_mid + 2) {
-            col = "#00E5FF"; // Magic ice neon core
-          }
-        } else if (element === "candy" && level >= 11) {
-          // Elven rabbit sweet flower ribbon element
-          if (x === cx_mid + 1 && y === cy_mid + 2) {
-            col = "#FF4081"; // Vibrant ribbon pink
-          }
-          if (x === cx_mid && y === cy_mid + 2) {
-            col = "#FFFFFF"; // Sparkling white center
-          }
-        }
-      }
-
-      midgroundLayer.push(px(x, y, col, "breathe-grp"));
-    }
-  });
-
-  // --- 7. FACE EXPRESSIONS (Big glowing eyes, Smile & Blushes) ---
-  const faceY = ys + Math.floor(H * 0.42);
-  const eyeL = topL + 1;
-  const eyeR = topR - 1;
-  const lipX = Math.floor((eyeL + eyeR) / 2);
-
-  if (expr === "happy") {
-    // 😊 Happy (Curved "^" eyes, sweet smirking mouth)
-    faceLayer.push(px(eyeL, faceY + 1, "#1C1032", "breathe-grp"));
-    faceLayer.push(px(eyeL + 1, faceY, "#1C1032", "breathe-grp"));
-    faceLayer.push(px(eyeL + 2, faceY + 1, "#1C1032", "breathe-grp"));
-
-    faceLayer.push(px(eyeR - 2, faceY + 1, "#1C1032", "breathe-grp"));
-    faceLayer.push(px(eyeR - 1, faceY, "#1C1032", "breathe-grp"));
-    faceLayer.push(px(eyeR, faceY + 1, "#1C1032", "breathe-grp"));
-
-    faceLayer.push(px(lipX, faceY + 2, "#4A0E17", "breathe-grp"));
-    faceLayer.push(px(lipX + 1, faceY + 2, "#4A0E17", "breathe-grp"));
-    faceLayer.push(px(lipX, faceY + 3, "#FF75A9", "breathe-grp"));
-
-    // Rosy cheeks blush
-    faceLayer.push(px(eyeL - 2, faceY + 2, "#FF5E9B", "breathe-grp"));
-    faceLayer.push(px(eyeL - 1, faceY + 2, "#FF5E9B", "breathe-grp"));
-    faceLayer.push(px(eyeR + 1, faceY + 2, "#FF5E9B", "breathe-grp"));
-    faceLayer.push(px(eyeR + 2, faceY + 2, "#FF5E9B", "breathe-grp"));
-  } else if (expr === "very_happy") {
-    // 😄 Very Happy (Double sparkles high curved closed eyes, huge laughing mouth)
-    faceLayer.push(px(eyeL, faceY, "#1C1032", "breathe-grp"));
-    faceLayer.push(px(eyeL + 1, faceY - 1, "#1C1032", "breathe-grp"));
-    faceLayer.push(px(eyeL + 2, faceY, "#1C1032", "breathe-grp"));
-
-    faceLayer.push(px(eyeR - 2, faceY, "#1C1032", "breathe-grp"));
-    faceLayer.push(px(eyeR - 1, faceY - 1, "#1C1032", "breathe-grp"));
-    faceLayer.push(px(eyeR, faceY, "#1C1032", "breathe-grp"));
-
-    faceLayer.push(px(lipX - 1, faceY + 2, "#1C1032", "breathe-grp"));
-    faceLayer.push(px(lipX, faceY + 2, "#4A0E17", "breathe-grp"));
-    faceLayer.push(px(lipX + 1, faceY + 2, "#4A0E17", "breathe-grp"));
-    faceLayer.push(px(lipX + 2, faceY + 2, "#1C1032", "breathe-grp"));
-    faceLayer.push(px(lipX, faceY + 3, "#FF75A9", "breathe-grp"));
-    faceLayer.push(px(lipX + 1, faceY + 3, "#FF75A9", "breathe-grp"));
-
-    faceLayer.push(px(eyeL - 2, faceY + 2, "#FF5E9B", "breathe-grp"));
-    faceLayer.push(px(eyeL - 1, faceY + 2, "#FF5E9B", "breathe-grp"));
-    faceLayer.push(px(eyeR + 1, faceY + 2, "#FF5E9B", "breathe-grp"));
-    faceLayer.push(px(eyeR + 2, faceY + 2, "#FF5E9B", "breathe-grp"));
-  } else if (expr === "sad") {
-    // 😢 Sad (Dripping tear, tiny frown mouth)
-    faceLayer.push(px(eyeL, faceY, "#1C1032", "breathe-grp"));
-    faceLayer.push(px(eyeL + 1, faceY + 1, "#1C1032", "breathe-grp"));
-    faceLayer.push(px(eyeL + 2, faceY + 1, "#1C1032", "breathe-grp"));
-    faceLayer.push(px(eyeL, faceY + 2, "#3B82F6", "breathe-grp")); // Left Tear
-
-    faceLayer.push(px(eyeR, faceY, "#1C1032", "breathe-grp"));
-    faceLayer.push(px(eyeR - 1, faceY + 1, "#1C1032", "breathe-grp"));
-    faceLayer.push(px(eyeR - 2, faceY + 1, "#1C1032", "breathe-grp"));
-    faceLayer.push(px(eyeR, faceY + 2, "#3B82F6", "breathe-grp")); // Right Tear
-
-    faceLayer.push(px(lipX - 1, faceY + 3, "#1C1032", "breathe-grp"));
-    faceLayer.push(px(lipX, faceY + 2, "#1C1032", "breathe-grp"));
-    faceLayer.push(px(lipX + 1, faceY + 2, "#1C1032", "breathe-grp"));
-    faceLayer.push(px(lipX + 2, faceY + 3, "#1C1032", "breathe-grp"));
-  } else if (expr === "hungry") {
-    // 😢 Hungry (Downward skewed eyes, sad mouth)
-    faceLayer.push(px(eyeL, faceY, "#1C1032", "breathe-grp"));
-    faceLayer.push(px(eyeL + 1, faceY + 1, "#1C1032", "breathe-grp"));
-    faceLayer.push(px(eyeL + 2, faceY + 1, "#1C1032", "breathe-grp"));
-
-    faceLayer.push(px(eyeR, faceY, "#1C1032", "breathe-grp"));
-    faceLayer.push(px(eyeR - 1, faceY + 1, "#1C1032", "breathe-grp"));
-    faceLayer.push(px(eyeR - 2, faceY + 1, "#1C1032", "breathe-grp"));
-
-    // Sad small frown mouth
-    faceLayer.push(px(lipX - 1, faceY + 3, "#1C1032", "breathe-grp"));
-    faceLayer.push(px(lipX, faceY + 2, "#1C1032", "breathe-grp"));
-    faceLayer.push(px(lipX + 1, faceY + 2, "#1C1032", "breathe-grp"));
-    faceLayer.push(px(lipX + 2, faceY + 3, "#1C1032", "breathe-grp"));
-
-    // Subtle pale blush
-    faceLayer.push(px(eyeL - 2, faceY + 2, "#FF85A5", "breathe-grp"));
-    faceLayer.push(px(eyeR + 2, faceY + 2, "#FF85A5", "breathe-grp"));
-  } else if (expr === "tired") {
-    // 😴 Tired (Closed flat eyes, small circular sighing mouth, drifting sleepy Zzz)
-    faceLayer.push(px(eyeL - 1, faceY + 1, "#1C1032", "breathe-grp"));
-    faceLayer.push(px(eyeL, faceY + 1, "#1C1032", "breathe-grp"));
-    faceLayer.push(px(eyeL + 1, faceY + 1, "#1C1032", "breathe-grp"));
-
-    faceLayer.push(px(eyeR - 1, faceY + 1, "#1C1032", "breathe-grp"));
-    faceLayer.push(px(eyeR, faceY + 1, "#1C1032", "breathe-grp"));
-    faceLayer.push(px(eyeR + 1, faceY + 1, "#1C1032", "breathe-grp"));
-
-    faceLayer.push(px(lipX, faceY + 2, "#1C1032", "breathe-grp"));
-    faceLayer.push(px(lipX + 1, faceY + 2, "#1C1032", "breathe-grp"));
-
-    // Micro Zzz
-    faceLayer.push(px(eyeR + 3, faceY - 2, "#93C5FD", "float-grp"));
-    faceLayer.push(px(eyeR + 4, faceY - 2, "#93C5FD", "float-grp"));
-    faceLayer.push(px(eyeR + 4, faceY - 1, "#93C5FD", "float-grp"));
-    faceLayer.push(px(eyeR + 3, faceY, "#93C5FD", "float-grp"));
-    faceLayer.push(px(eyeR + 4, faceY, "#93C5FD", "float-grp"));
-  } else if (expr === "angry") {
-    // 😡 Angry (Fierce slanted eyebrows and grim red cheeks)
-    faceLayer.push(px(eyeL, faceY - 1, "#1C1032", "breathe-grp"));
-    faceLayer.push(px(eyeL + 1, faceY, "#1C1032", "breathe-grp"));
-    faceLayer.push(px(eyeL + 1, faceY + 1, "#1C1032", "breathe-grp"));
-
-    faceLayer.push(px(eyeR, faceY - 1, "#1C1032", "breathe-grp"));
-    faceLayer.push(px(eyeR - 1, faceY, "#1C1032", "breathe-grp"));
-    faceLayer.push(px(eyeR - 1, faceY + 1, "#1C1032", "breathe-grp"));
-
-    faceLayer.push(px(lipX - 1, faceY + 3, "#1C1032", "breathe-grp"));
-    faceLayer.push(px(lipX, faceY + 2, "#1C1032", "breathe-grp"));
-    faceLayer.push(px(lipX + 1, faceY + 3, "#1C1032", "breathe-grp"));
-    faceLayer.push(px(lipX + 2, faceY + 2, "#1C1032", "breathe-grp"));
-
-    faceLayer.push(px(eyeL - 1, faceY + 2, "#EF4444", "breathe-grp"));
-    faceLayer.push(px(eyeR + 1, faceY + 2, "#EF4444", "breathe-grp"));
-  } else if (expr === "excited") {
-    // 🤩 Excited (Golden stars as eyes, high wide screaming smile)
-    faceLayer.push(px(eyeL, faceY - 1, "#FBBF24", "breathe-grp"));
-    faceLayer.push(px(eyeL + 1, faceY, "#FFFFFF", "breathe-grp"));
-    faceLayer.push(px(eyeL - 1, faceY, "#FFFFFF", "breathe-grp"));
-    faceLayer.push(px(eyeL, faceY + 1, "#FBBF24", "breathe-grp"));
-
-    faceLayer.push(px(eyeR, faceY - 1, "#FBBF24", "breathe-grp"));
-    faceLayer.push(px(eyeR + 1, faceY, "#FFFFFF", "breathe-grp"));
-    faceLayer.push(px(eyeR - 1, faceY, "#FFFFFF", "breathe-grp"));
-    faceLayer.push(px(eyeR, faceY + 1, "#FBBF24", "breathe-grp"));
-
-    faceLayer.push(px(lipX - 1, faceY + 2, "#1C1032", "breathe-grp"));
-    faceLayer.push(px(lipX, faceY + 3, "#EF4444", "breathe-grp"));
-    faceLayer.push(px(lipX + 1, faceY + 3, "#EF4444", "breathe-grp"));
-    faceLayer.push(px(lipX + 2, faceY + 2, "#1C1032", "breathe-grp"));
-
-    faceLayer.push(px(eyeL - 2, faceY + 2, "#FF3E8B", "breathe-grp"));
-    faceLayer.push(px(eyeR + 2, faceY + 2, "#FF3E8B", "breathe-grp"));
-  } else if (expr === "love") {
-    // 🥰 Love (Glistening hearts as eyes, warm red lip, loving blushes)
-    faceLayer.push(px(eyeL - 1, faceY - 1, "#FF5E9B", "breathe-grp"));
-    faceLayer.push(px(eyeL + 1, faceY - 1, "#FF5E9B", "breathe-grp"));
-    faceLayer.push(px(eyeL, faceY, "#FF5E9B", "breathe-grp"));
-    faceLayer.push(px(eyeL + 1, faceY, "#FF5E9B", "breathe-grp"));
-    faceLayer.push(px(eyeL, faceY + 1, "#FF5E9B", "breathe-grp"));
-
-    faceLayer.push(px(eyeR - 2, faceY - 1, "#FF5E9B", "breathe-grp"));
-    faceLayer.push(px(eyeR, faceY - 1, "#FF5E9B", "breathe-grp"));
-    faceLayer.push(px(eyeR - 1, faceY, "#FF5E9B", "breathe-grp"));
-    faceLayer.push(px(eyeR, faceY, "#FF5E9B", "breathe-grp"));
-    faceLayer.push(px(eyeR - 1, faceY + 1, "#FF5E9B", "breathe-grp"));
-
-    faceLayer.push(px(lipX, faceY + 2, "#EF4444", "breathe-grp"));
-    faceLayer.push(px(lipX + 1, faceY + 2, "#EF4444", "breathe-grp"));
-
-    faceLayer.push(px(eyeL - 2, faceY + 3, "#FF85A5", "breathe-grp"));
-    faceLayer.push(px(eyeR + 2, faceY + 3, "#FF85A5", "breathe-grp"));
-  } else if (expr === "proud") {
-    // 😎 Proud (Cool sunglasses spanning across both eyes, confident side smirk)
-    for (let col = eyeL - 2; col <= eyeR + 2; col++) {
-      faceLayer.push(px(col, faceY, "#111822", "breathe-grp"));
-    }
-    faceLayer.push(px(eyeL - 1, faceY + 1, "#111822", "breathe-grp"));
-    faceLayer.push(px(eyeL, faceY + 1, "#111822", "breathe-grp"));
-    faceLayer.push(px(eyeR, faceY + 1, "#111822", "breathe-grp"));
-    faceLayer.push(px(eyeR - 1, faceY + 1, "#111822", "breathe-grp"));
-    faceLayer.push(px(eyeL - 1, faceY, "#FFFFFF", "breathe-grp"));
-    faceLayer.push(px(eyeR, faceY, "#FFFFFF", "breathe-grp"));
-
-    faceLayer.push(px(lipX, faceY + 2, "#1C1032", "breathe-grp"));
-    faceLayer.push(px(lipX + 1, faceY + 2, "#1C1032", "breathe-grp"));
-    faceLayer.push(px(lipX + 2, faceY + 1, "#1C1032", "breathe-grp"));
+  if (isPlump) {
+    // Round, chubby bouncy layout
+    bodyPath = "M 42,150 C 42,95 72,66 128,66 C 184,66 214,95 214,150 C 214,195 186,215 128,215 C 70,215 42,195 42,150 Z";
+    shadowRx = 80;
+    shadowRy = 14;
+  } else if (isHungry) {
+    // Deflated, stretched thin, malnourished layout
+    bodyPath = "M 66,145 C 66,98 90,72 128,72 C 166,72 190,98 190,145 C 190,188 165,206 128,206 C 91,206 66,188 66,145 Z";
+    shadowRx = 48;
+    shadowRy = 9;
   } else {
-    // 😐 Normal Default (Classic pixel eyes look)
-    faceLayer.push(px(eyeL, faceY, "#1C1032", "breathe-grp"));
-    faceLayer.push(px(eyeL, faceY + 1, "#1C1032", "breathe-grp"));
-    faceLayer.push(px(eyeL + 1, faceY, "#1C1032", "breathe-grp"));
-    faceLayer.push(px(eyeL + 1, faceY + 1, "#1C1032", "breathe-grp"));
-    faceLayer.push(px(eyeL, faceY, "#FFFFFF", "breathe-grp"));
-
-    faceLayer.push(px(eyeR, faceY, "#1C1032", "breathe-grp"));
-    faceLayer.push(px(eyeR, faceY + 1, "#1C1032", "breathe-grp"));
-    faceLayer.push(px(eyeR - 1, faceY, "#1C1032", "breathe-grp"));
-    faceLayer.push(px(eyeR - 1, faceY + 1, "#1C1032", "breathe-grp"));
-    faceLayer.push(px(eyeR - 1, faceY, "#FFFFFF", "breathe-grp"));
-
-    faceLayer.push(px(lipX, faceY + 2, "#4A0E17", "breathe-grp"));
-    faceLayer.push(px(lipX + 1, faceY + 2, "#4A0E17", "breathe-grp"));
-    faceLayer.push(px(lipX, faceY + 3, "#FF75A9", "breathe-grp"));
-
-    faceLayer.push(px(eyeL - 2, faceY + 2, "#FF5E9B", "breathe-grp"));
-    faceLayer.push(px(eyeL - 1, faceY + 2, "#FF5E9B", "breathe-grp"));
-    faceLayer.push(px(eyeR + 1, faceY + 2, "#FF5E9B", "breathe-grp"));
-    faceLayer.push(px(eyeR + 2, faceY + 2, "#FF5E9B", "breathe-grp"));
+    // Perfect normal teardrop layout
+    bodyPath = "M 50,148 C 50,96 78,68 128,68 C 178,68 206,96 206,148 C 206,192 180,211 128,211 C 76,211 50,192 50,148 Z";
+    shadowRx = 65;
+    shadowRy = 12;
   }
 
-  // --- 8. ELEMENT CUSTOM PARTICLE EMITTERS ---
+  // Accessories markup depending on element
+  let wingsMarkup = "";
+  let hornMarkup = "";
+  let emblemMarkup = "";
+
+  // Draw customized horns, wings, and emblems based on evolution size/level ranges
+  // 3 levels of evolution: Stage 1 (Lvl 4-7), Stage 2 (Lvl 8-15), Stage 3 (Lvl 16+)
   if (level >= 8) {
-    const partCol = palette.particle;
-    
-    // Choose particle visuals depending on element type
-    let pMarkup1 = px(4, 13, partCol, "p-slow1");
-    let pMarkup2 = px(27, 15, partCol, "p-slow2");
-    
-    if (element === "forest") {
-      // Little leaves / clovers
-      pMarkup1 = px(4, 13, "#1C9E40", "p-slow1") + px(5, 12, "#ADE8BC", "p-slow1");
-      pMarkup2 = px(27, 15, "#1C9E40", "p-slow2") + px(26, 16, "#ADE8BC", "p-slow2");
+    const scale = level >= 16 ? 1.3 : 1.0;
+    if (element === "magic") {
+      // Demonic bat wings
+      wingsMarkup = `
+        <g class="${wingClass}" fill="#4A1D95" stroke="${outlineColor}" stroke-width="4">
+          <!-- Left Wing -->
+          <path d="M 54,142 C 10,130 -10,160 14,180 C 18,170 30,165 52,158 Z" transform="scale(${scale}) translate(${(1-scale)*128}, ${(1-scale)*150})"/>
+          <!-- Right Wing -->
+          <path d="M 202,142 C 246,130 266,160 242,180 C 238,170 226,165 204,158 Z" transform="scale(${scale}) translate(${(1-scale)*128}, ${(1-scale)*150})"/>
+        </g>
+      `;
+
+      // Demonic red horns
+      hornMarkup = `
+        <g fill="#EF4444" stroke="${outlineColor}" stroke-width="4">
+          <!-- Left Horn -->
+          <path d="M 86,85 Q 60,60 55,80 Q 75,90 92,94 Z"/>
+          <!-- Right Horn -->
+          <path d="M 170,85 Q 196,60 201,80 Q 181,90 164,94 Z"/>
+        </g>
+      `;
+
+      // Demonic heart forehead sigil
+      emblemMarkup = `
+        <path d="M 128,172 L 121,165 C 114,158 111,154 111,148 C 111,141 116,136 123,136 C 126,136 127,138 128,140 C 129,138 130,136 133,136 C 140,136 145,141 145,148 C 145,154 142,158 135,165 Z" 
+              fill="#D8B4FE" stroke="${outlineColor}" stroke-width="3" style="transform: translate(0, 10px);"/>
+      `;
     } else if (element === "crystal") {
-      // Ice flakes
-      pMarkup1 = px(4, 13, "#22D3EE", "p-slow1") + px(5, 12, "#FFFFFF", "p-slow1");
-      pMarkup2 = px(27, 15, "#22D3EE", "p-slow2") + px(26, 16, "#FFFFFF", "p-slow2");
-    } else if (element === "magic") {
-      // Deep purple shadow spikes
-      pMarkup1 = px(4, 13, "#491C80", "p-slow1") + px(5, 12, "#A855F7", "p-slow1");
-      pMarkup2 = px(27, 15, "#491C80", "p-slow2") + px(26, 16, "#A855F7", "p-slow2");
-    } else if (element === "candy") {
-      // Pink love hearts
-      pMarkup1 = px(4, 13, "#F43F5E", "p-slow1") + px(5, 12, "#FDA4AF", "p-slow1");
-      pMarkup2 = px(27, 15, "#F43F5E", "p-slow2") + px(26, 16, "#FDA4AF", "p-slow2");
+      // Ice crystal wing blades
+      wingsMarkup = `
+        <g class="${wingClass}" fill="#06B6D4" stroke="${outlineColor}" stroke-width="4">
+          <!-- Left Wing -->
+          <path d="M 52,136 L 5,120 L 25,150 L 10,170 L 52,154 Z" transform="scale(${scale}) translate(${(1-scale)*128}, ${(1-scale)*150})"/>
+          <!-- Right Wing -->
+          <path d="M 204,136 L 251,120 L 231,150 L 246,170 L 204,154 Z" transform="scale(${scale}) translate(${(1-scale)*128}, ${(1-scale)*150})"/>
+        </g>
+      `;
+
+      // Ice crown headcrest spikes
+      hornMarkup = `
+        <g fill="#A5F3FC" stroke="${outlineColor}" stroke-width="4">
+          <path d="M 128,42 L 118,72 L 138,72 Z"/>
+          <path d="M 108,52 L 104,78 L 120,78 Z"/>
+          <path d="M 148,52 L 152,78 L 136,78 Z"/>
+        </g>
+      `;
+
+      // Snowflake chest gem
+      emblemMarkup = `
+        <polygon points="128,142 133,152 143,152 135,158 138,168 128,161 118,168 121,158 113,152 123,152" 
+                 fill="#E0F2FE" stroke="${outlineColor}" stroke-width="3" style="transform: translate(0, 5px);"/>
+      `;
+    } else if (element === "forest") {
+      // Foliage back leaves
+      wingsMarkup = `
+        <g class="${wingClass}" fill="#047857" stroke="${outlineColor}" stroke-width="4">
+          <!-- Left Green Leaf -->
+          <path d="M 56,150 C 20,130 10,180 40,200 C 50,190 54,175 58,160 Z" transform="scale(${scale}) translate(${(1-scale)*128}, ${(1-scale)*150})"/>
+          <!-- Right Green Leaf -->
+          <path d="M 200,150 C 236,130 246,180 216,200 C 206,190 202,175 198,160 Z" transform="scale(${scale}) translate(${(1-scale)*128}, ${(1-scale)*150})"/>
+        </g>
+      `;
+
+      // Forest flower head wreath / antler sprouts
+      hornMarkup = `
+        <g fill="#34D399" stroke="${outlineColor}" stroke-width="4">
+          <!-- Left Branch -->
+          <path d="M 92,80 Q 75,50 82,45 Q 90,52 96,72 Z"/>
+          <!-- Right Branch -->
+          <path d="M 164,80 Q 183,50 176,45 Q 168,52 162,72 Z"/>
+          <!-- Yellow center rose blossom -->
+          <circle cx="128" cy="74" r="10" fill="#F43F5E"/>
+          <circle cx="128" cy="74" r="5" fill="#FBBF24"/>
+        </g>
+      `;
+
+      // Leaf chest charm
+      emblemMarkup = `
+        <path d="M 128,145 C 118,145 118,165 128,165 C 138,165 138,145 128,145 Z" 
+              fill="#A7F3D0" stroke="${outlineColor}" stroke-width="3" style="transform: translate(0, 10px);"/>
+      `;
     } else if (element === "star") {
-      // Yellow glowing stars
-      pMarkup1 = px(4, 13, "#EAB308", "p-slow1") + px(5, 12, "#FEF08A", "p-slow1");
-      pMarkup2 = px(27, 15, "#EAB308", "p-slow2") + px(26, 16, "#FEF08A", "p-slow2");
-    }
+      // Elegant feathery golden angel wings
+      wingsMarkup = `
+        <g class="${wingClass}" fill="#F59E0B" stroke="${outlineColor}" stroke-width="4">
+          <path d="M 50,140 C 0,110 -15,165 25,190 C 35,175 42,165 52,155 Z" transform="scale(${scale}) translate(${(1-scale)*128}, ${(1-scale)*150})"/>
+          <path d="M 206,140 C 256,110 271,165 231,190 C 221,175 214,165 204,155 Z" transform="scale(${scale}) translate(${(1-scale)*128}, ${(1-scale)*150})"/>
+        </g>
+      `;
 
-    foregroundLayer.push(pMarkup1);
-    foregroundLayer.push(pMarkup2);
+      // Radiant paladin star horn spikes
+      hornMarkup = `
+        <g fill="#FBBF24" stroke="${outlineColor}" stroke-width="4">
+          <polygon points="128,32 133,52 153,52 137,62 142,82 128,70 114,82 119,62 103,52 123,52"/>
+        </g>
+      `;
 
-    if (level >= 13) {
-      foregroundLayer.push(px(7, 5, "#ffffff", "p-slow2"));
-      foregroundLayer.push(px(24, 6, partCol, "p-slow1"));
-    }
+      // Shining center star crest
+      emblemMarkup = `
+        <polygon points="128,140 131,150 141,150 133,155 136,165 128,158 120,165 123,155 115,150 125,150" 
+                 fill="#FEF08A" stroke="${outlineColor}" stroke-width="3" style="transform: translate(0, 8px);"/>
+      `;
+    } else if (element === "candy") {
+      // Long bunny ears as wings/acc flanking
+      wingsMarkup = `
+        <g class="${wingClass}" fill="#F472B6" stroke="${outlineColor}" stroke-width="4">
+          <!-- Tall Bunny ears -->
+          <path d="M 76,82 C 55,30 35,50 66,95 Z"/>
+          <path d="M 180,82 C 201,30 221,50 190,95 Z"/>
+          <!-- Inner soft pink velvet paths -->
+          <path d="M 71,76 C 58,40 48,52 66,85 Z" fill="#FBCFE8" stroke="none"/>
+          <path d="M 185,76 C 198,40 208,52 190,85 Z" fill="#FBCFE8" stroke="none"/>
+        </g>
+      `;
 
-    if (level >= 17) {
-      foregroundLayer.push(px(11, 4, "#ffffff", "p-slow1"));
-      foregroundLayer.push(px(20, 4, "#ffffff", "p-slow2"));
+      // Candy Lollipop headpiece
+      hornMarkup = `
+        <g fill="#EC4899" stroke="${outlineColor}" stroke-width="4">
+          <circle cx="128" cy="65" r="14"/>
+          <!-- Swirl design -->
+          <path d="M 128,51 A 14,14 0 0,1 142,65 A 14,14 0 0,1 128,79" fill="none" stroke="#FFFFFF" stroke-width="3"/>
+          <rect x="125" y="79" width="6" height="15" fill="#F3F4F6" stroke="${outlineColor}" stroke-width="3"/>
+        </g>
+      `;
+
+      // Cute blossom ribbon bow tie
+      emblemMarkup = `
+        <g stroke="${outlineColor}" stroke-width="3" style="transform: translate(128px, 160px) scale(0.95);">
+          <path d="M -15,-6 Q -5,0 -15,6 Z M 15,-6 Q 5,0 15,6 Z" fill="#F43F5E"/>
+          <circle cx="0" cy="0" r="5" fill="#FEF08A"/>
+        </g>
+      `;
     }
   }
 
-  // --- CONSOLIDATED DIGITAL SPRITE OUTPUT ---
-  return `
-    <svg viewBox="0 0 256 256" xmlns="http://www.w3.org/2000/svg" style="style="width: 100%; height: 100%;" width: 100%; height: 100%;">
-      <style>${css}</style>
-      <!-- Background Layers (Wings, Tail, Magic circles) -->
-      ${backgroundLayer.join("")}
-
-      <g class="${expr === 'sad' ? 'sad-shrink-grp' : ''} ${expr === 'very_happy' ? 'happy-hop-grp' : ''} ${expr === 'excited' ? 'excited-glow-grp' : ''} ${expr === 'tired' ? 'tired-slow-grp' : ''}">
-        <!-- Midground Layers (Ground shadow, Main body blocks) -->
-        ${midgroundLayer.join("")}
-
-        <!-- Face Layers (Big cute shine eyes, blushes, mouth) -->
-        ${faceLayer.join("")}
-
-        <!-- Foreground Layers (Epic crowns, front horns, drifting sparkles) -->
-        ${foregroundLayer.join("")}
+  // Floating crown or halos for level >= 16 (Majestic Peak)
+  let peakMarkup = "";
+  if (level >= 16) {
+    peakMarkup = `
+      <g class="${floatClass}" style="transform-origin: center 50px;">
+        <!-- Glowing Halo -->
+        <ellipse cx="128" cy="38" rx="42" ry="9" fill="none" stroke="#FEF08A" stroke-width="5" stroke-dasharray="8 4" opacity="0.9"/>
+        <!-- Golden Tiara Jewels -->
+        <polygon points="128,34 135,46 142,40 149,52 107,52 114,40 121,46" fill="#FBBF24" stroke="${outlineColor}" stroke-width="3"/>
+        <circle cx="128" cy="30" r="3" fill="#D946EF" stroke="${outlineColor}" stroke-width="2"/>
       </g>
+    `;
+  }
+
+  // -------------------------------------------------------------
+  // EMOTIONAL FACIAL RENDERERS (EYES & MOUTH + SPECIAL FLOATING METAPHOR SYMBOLS)
+  // -------------------------------------------------------------
+  let eyesAndMouthSvg = "";
+  let specialEmotionOverlay = "";
+
+  // Dynamic positioning offsets based on slime satiety states
+  const faceOffsetY = isPlump ? 6 : (isHungry ? -4 : 0);
+  const faceY = 143 + faceOffsetY;
+  const eyeLeftX = 96;
+  const eyeRightX = 160;
+  const mouthX = 128;
+
+  switch (expr) {
+    case "happy":
+      // Smiling closed eyes ^ ^, rosy blushes, laughing open mouth
+      eyesAndMouthSvg = `
+        <!-- Left Happy Eye -->
+        <path d="M ${eyeLeftX-10},${faceY+2} Q ${eyeLeftX},${faceY-10} ${eyeLeftX+10},${faceY+2}" fill="none" stroke="${outlineColor}" stroke-width="6" stroke-linecap="round"/>
+        <!-- Right Happy Eye -->
+        <path d="M ${eyeRightX-10},${faceY+2} Q ${eyeRightX},${faceY-10} ${eyeRightX+10},${faceY+2}" fill="none" stroke="${outlineColor}" stroke-width="6" stroke-linecap="round"/>
+        <!-- Warm blushes -->
+        <ellipse cx="${eyeLeftX-8}" cy="${faceY+10}" rx="12" ry="6" fill="#F43F5E" opacity="0.4"/>
+        <ellipse cx="${eyeRightX+8}" cy="${faceY+10}" rx="12" ry="6" fill="#F43F5E" opacity="0.4"/>
+        <!-- Cute laughing smile -->
+        <path d="M ${mouthX-10},${faceY+4} Q ${mouthX},${faceY+14} ${mouthX+10},${faceY+4}" fill="none" stroke="${outlineColor}" stroke-width="5" stroke-linecap="round"/>
+      `;
+      break;
+
+    case "very_happy":
+      // Shimmering full curved blinking happy eyes, huge wide-open joyful mouth showing pink tongue!
+      eyesAndMouthSvg = `
+        <!-- Curved Blinking eyes -->
+        <path d="M ${eyeLeftX-12},${faceY} Q ${eyeLeftX},${faceY-12} ${eyeLeftX+12},${faceY}" fill="none" stroke="${outlineColor}" stroke-width="7" stroke-linecap="round"/>
+        <path d="M ${eyeRightX-12},${faceY} Q ${eyeRightX},${faceY-12} ${eyeRightX+12},${faceY}" fill="none" stroke="${outlineColor}" stroke-width="7" stroke-linecap="round"/>
+        <!-- Big cheering mouth -->
+        <path d="M ${mouthX-16},${faceY+3} C ${mouthX-16},${faceY+25} ${mouthX+16},${faceY+25} ${mouthX+16},${faceY+3} Z" fill="#991B1B" stroke="${outlineColor}" stroke-width="4"/>
+        <!-- Tongue -->
+        <path d="M ${mouthX-11},${faceY+15} Q ${mouthX},${faceY+8} ${mouthX+11},${faceY+15} Q ${mouthX},${faceY+24} ${mouthX-11},${faceY+15}" fill="#FB7185"/>
+        <!-- Soft golden blushes -->
+        <ellipse cx="${eyeLeftX-10}" cy="${faceY+12}" rx="14" ry="7" fill="#F59E0B" opacity="0.3"/>
+        <ellipse cx="${eyeRightX+10}" cy="${faceY+12}" rx="14" ry="7" fill="#F59E0B" opacity="0.3"/>
+      `;
+      break;
+
+    case "sad":
+      // Teary downward eyes, crying teardrop streaks, small down-turned frown
+      eyesAndMouthSvg = `
+        <!-- Sad droopy eyes -->
+        <path d="M ${eyeLeftX-12},${faceY-6} C ${eyeLeftX-12},${faceY+6} ${eyeLeftX+2},${faceY+6} ${eyeLeftX+2},${faceY-6} Z" fill="${outlineColor}"/>
+        <path d="M ${eyeRightX-2},${faceY-6} C ${eyeRightX-2},${faceY+6} ${eyeRightX+12},${faceY+6} ${eyeRightX+12},${faceY-6} Z" fill="${outlineColor}"/>
+        <circle cx="${eyeLeftX-4}" cy="${faceY-1}" r="3" fill="#FFFFFF"/>
+        <circle cx="${eyeRightX+4}" cy="${faceY-1}" r="3" fill="#FFFFFF"/>
+        <!-- Downward frown mouth -->
+        <path d="M ${mouthX-10},${faceY+15} Q ${mouthX},${faceY+5} ${mouthX+10},${faceY+15}" fill="none" stroke="${outlineColor}" stroke-width="5" stroke-linecap="round"/>
+      `;
+      // Translucent giant crying teardrops sliding down the cheeks
+      specialEmotionOverlay = `
+        <g class="pulse-anim" style="transform-origin: 128px 140px;">
+          <!-- Left teardrop -->
+          <path d="M ${eyeLeftX-4},${faceY+6} C ${eyeLeftX-12},${faceY+28} ${eyeLeftX+4},${faceY+28} ${eyeLeftX-4},${faceY+6} Z" fill="#60A5FA" opacity="0.85" stroke="#2563EB" stroke-width="2"/>
+          <!-- Right teardrop -->
+          <path d="M ${eyeRightX+4},${faceY+6} C ${eyeRightX-4},${faceY+28} ${eyeRightX+12},${faceY+28} ${eyeRightX+4},${faceY+6} Z" fill="#60A5FA" opacity="0.85" stroke="#2563EB" stroke-width="2"/>
+        </g>
+      `;
+      break;
+
+    case "hungry":
+      // Hollow exhausted vertical-line eyes, trembling wave mouth, blue sweat droplets on head
+      eyesAndMouthSvg = `
+        <!-- Exhausted vertical hollow slits -->
+        <rect x="${eyeLeftX-5}" y="${faceY-10}" width="8" height="18" rx="4" fill="${outlineColor}" opacity="0.9"/>
+        <rect x="${eyeRightX-3}" y="${faceY-10}" width="8" height="18" rx="4" fill="${outlineColor}" opacity="0.9"/>
+        <!-- Shaky stomach-rumbling squiggly wave mouth -->
+        <path d="M ${mouthX-14},${faceY+8} Q ${mouthX-7},${faceY+3} ${mouthX},${faceY+8} T ${mouthX+14},${faceY+8}" fill="none" stroke="${outlineColor}" stroke-width="4.5" stroke-linecap="round"/>
+      `;
+      // Shaky cold sweat drops on the forehead/temple
+      specialEmotionOverlay = `
+        <g class="pulse-anim">
+          <!-- Cold sweatdrop left -->
+          <path d="M 72,118 C 66,118 62,126 72,132 C 78,126 78,118 72,118" fill="#38BDF8" opacity="0.85" stroke="#0284C7" stroke-width="2"/>
+          <!-- Cold sweatdrop right -->
+          <path d="M 184,118 C 178,118 174,126 184,132 C 190,126 190,118 184,118" fill="#38BDF8" opacity="0.85" stroke="#0284C7" stroke-width="2"/>
+        </g>
+      `;
+      break;
+
+    case "tired":
+      // Semi-closed sleepy lids, small circular yawning mouth, drifting cozy Sleeping "Zzz..." alphabet particles
+      eyesAndMouthSvg = `
+        <!-- Sleeping lids -->
+        <line x1="${eyeLeftX-12}" y1="${faceY}" x2="${eyeLeftX+12}" y2="${faceY}" stroke="${outlineColor}" stroke-width="6.5" stroke-linecap="round"/>
+        <line x1="${eyeRightX-12}" y1="${faceY}" x2="${eyeRightX+12}" y2="${faceY}" stroke="${outlineColor}" stroke-width="6.5" stroke-linecap="round"/>
+        <!-- Circular yawning mouth -->
+        <circle cx="${mouthX}" cy="${faceY+10}" r="8" fill="#500724" stroke="${outlineColor}" stroke-width="4"/>
+      `;
+      // Drifting sleepy Z's floating upwards
+      specialEmotionOverlay = `
+        <g class="float-item-anim" style="animation-duration: 4s;">
+          <!-- Zzz letters -->
+          <text x="${eyeRightX+18}" y="${faceY-32}" font-family="monospace" font-size="16" font-weight="900" fill="#60A5FA" opacity="0.9">Z</text>
+          <text x="${eyeRightX+30}" y="${faceY-48}" font-family="monospace" font-size="22" font-weight="900" fill="#93C5FD" opacity="0.75">z</text>
+          <text x="${eyeRightX+42}" y="${faceY-64}" font-family="monospace" font-size="28" font-weight="900" fill="#DBEAFE" opacity="0.6">z</text>
+        </g>
+      `;
+      break;
+
+    case "angry":
+      // Fierce inward slanted eyebrows, red warning veins pulsing, grim flat mouth
+      eyesAndMouthSvg = `
+        <!-- Slanted eyebrows -->
+        <path d="M ${eyeLeftX-12},${faceY-10} L ${eyeLeftX+10},${faceY-2}" fill="none" stroke="${outlineColor}" stroke-width="6.5" stroke-linecap="round"/>
+        <path d="M ${eyeRightX+12},${faceY-10} L ${eyeRightX-10},${faceY-2}" fill="none" stroke="${outlineColor}" stroke-width="6.5" stroke-linecap="round"/>
+        <!-- Determined angry eyes -->
+        <circle cx="${eyeLeftX}" cy="${faceY+2}" r="8" fill="${outlineColor}"/>
+        <circle cx="${eyeLeftX-3}" cy="${faceY}" r="2.5" fill="#FFFFFF"/>
+        <circle cx="${eyeRightX}" cy="${faceY+2}" r="8" fill="${outlineColor}"/>
+        <circle cx="${eyeRightX+3}" cy="${faceY}" r="2.5" fill="#FFFFFF"/>
+        <!-- Grim flat mouth -->
+        <line x1="${mouthX-12}" y1="${faceY+12}" x2="${mouthX+12}" y2="${faceY+12}" stroke="${outlineColor}" stroke-width="5.5" stroke-linecap="round"/>
+      `;
+      // Pulsing red comic-style angry vein marks (💢)
+      specialEmotionOverlay = `
+        <g class="pulse-anim" fill="none" stroke="#EF4444" stroke-width="4.5" stroke-linecap="round">
+          <!-- Left-Side anger mark -->
+          <path d="M 62,94 L 74,94 M 68,88 L 68,100 M 58,84 Q 78,84 78,104"/>
+          <!-- Right-Side anger mark -->
+          <path d="M 182,94 L 194,94 M 188,88 L 188,100 M 178,84 Q 198,84 198,104" stroke="#EF4444"/>
+        </g>
+      `;
+      break;
+
+    case "excited":
+      // Magnificent yellow star-pattern eyes, giant laughing open cheeks, sparkling particles flanking
+      eyesAndMouthSvg = `
+        <!-- Golden Star Left Eye -->
+        <polygon points="${eyeLeftX},${faceY-12} ${eyeLeftX+3},${faceY-4} ${eyeLeftX+11},${faceY-4} ${eyeLeftX+5},${faceY+2} ${eyeLeftX+7},${faceY+10} ${eyeLeftX},${faceY+5} ${eyeLeftX-7},${faceY+10} ${eyeLeftX-5},${faceY+2} ${eyeLeftX-11},${faceY-4} ${eyeLeftX-3},${faceY-4}" fill="#FBBF24" stroke="${outlineColor}" stroke-width="3"/>
+        <!-- Golden Star Right Eye -->
+        <polygon points="${eyeRightX},${faceY-12} ${eyeRightX+3},${faceY-4} ${eyeRightX+11},${faceY-4} ${eyeRightX+5},${faceY+2} ${eyeRightX+7},${faceY+10} ${eyeRightX},${faceY+5} ${eyeRightX-7},${faceY+10} ${eyeRightX-5},${faceY+2} ${eyeRightX-11},${faceY-4} ${eyeRightX-3},${faceY-4}" fill="#FBBF24" stroke="${outlineColor}" stroke-width="3"/>
+        <!-- High screaming open smile -->
+        <path d="M ${mouthX-14},${faceY+4} C ${mouthX-14},${faceY+24} ${mouthX+14},${faceY+24} ${mouthX+14},${faceY+4} Z" fill="#DC2626" stroke="${outlineColor}" stroke-width="4"/>
+        <path d="M ${mouthX-10},${faceY+14} Q ${mouthX},${faceY+8} ${mouthX+10},${faceY+14}" fill="none" stroke="#FCA5A5" stroke-width="4"/>
+      `;
+      // Sparkling stars flying around
+      specialEmotionOverlay = `
+        <g class="float-item-anim" fill="#FDE047" opacity="0.9">
+          <polygon points="60,80 63,85 68,85 64,88 66,93 60,90 54,93 56,88 52,85 57,85"/>
+          <polygon points="196,80 199,85 204,85 200,88 202,93 196,90 190,93 192,88 188,85 193,85"/>
+        </g>
+      `;
+      break;
+
+    case "love":
+      // Glistening heart-shaped eyes, pulsing, hot pink blush and a sweet whistling kiss mouth
+      eyesAndMouthSvg = `
+        <!-- Heart Left Eye -->
+        <path d="M ${eyeLeftX},${faceY-4} C ${eyeLeftX-8},${faceY-14} ${eyeLeftX-16},${faceY-4} ${eyeLeftX},${faceY+8} C ${eyeLeftX+16},${faceY-4} ${eyeLeftX+8},${faceY-14} ${eyeLeftX},${faceY-4} Z" fill="#EC4899" stroke="${outlineColor}" stroke-width="3"/>
+        <!-- Heart Right Eye -->
+        <path d="M ${eyeRightX},${faceY-4} C ${eyeRightX-8},${faceY-14} ${eyeRightX-16},${faceY-4} ${eyeRightX},${faceY+8} C ${eyeRightX+16},${faceY-4} ${eyeRightX+8},${faceY-14} ${eyeRightX},${faceY-4} Z" fill="#EC4899" stroke="${outlineColor}" stroke-width="3"/>
+        <!-- Whistling kiss mouth -->
+        <circle cx="${mouthX}" cy="${faceY+8}" r="5" fill="#EF4444" stroke="${outlineColor}" stroke-width="3.5"/>
+        <!-- Soft blush -->
+        <ellipse cx="${eyeLeftX-6}" cy="${faceY+12}" rx="10" ry="5" fill="#F43F5E" opacity="0.35"/>
+        <ellipse cx="${eyeRightX+6}" cy="${faceY+12}" rx="10" ry="5" fill="#F43F5E" opacity="0.35"/>
+      `;
+      // Spark-hearts rising up
+      specialEmotionOverlay = `
+        <g class="float-item-anim" fill="#FB7185">
+          <path d="M 64,100 C 60,94 56,94 56,100 C 56,106 64,112 64,112 C 64,112 72,106 72,100 C 72,94 68,94 64,100 Z" opacity="0.9"/>
+          <path d="M 192,100 C 188,94 184,94 184,100 C 184,106 192,112 192,112 C 192,112 200,106 200,100 C 200,94 196,94 192,100 Z" opacity="0.9"/>
+        </g>
+      `;
+      break;
+
+    case "proud":
+      // Cool dark designer sunglasses spanning across both eyes, cocky side-skewed grin smirk
+      eyesAndMouthSvg = `
+        <!-- Sunglasses frame -->
+        <path d="M 72,${faceY-5} L 184,${faceY-5} L 176,${faceY+9} C 160,${faceY+10} 144,${faceY+3} 128,${faceY+3} C 112,${faceY+3} 96,${faceY+10} 80,${faceY+9} Z" fill="#1E293B" stroke="${outlineColor}" stroke-width="4.5"/>
+        <!-- Sunglass lenses sparkles reflection -->
+        <polygon points="84,${faceY-2} 98,${faceY-2} 92,${faceY+6}" fill="#FFFFFF" opacity="0.7"/>
+        <polygon points="144,${faceY-2} 158,${faceY-2} 152,${faceY+6}" fill="#FFFFFF" opacity="0.7"/>
+        <!-- Cocky smirk -->
+        <path d="M ${mouthX-5},${faceY+14} Q ${mouthX+12},${faceY+14} ${mouthX+14},${faceY+6}" fill="none" stroke="${outlineColor}" stroke-width="5.5" stroke-linecap="round"/>
+      `;
+      break;
+
+    default:
+      // Classic default normal face: friendly round shiny eyes, warm blush, and a smiling mouth
+      eyesAndMouthSvg = `
+        <!-- Left eye -->
+        <circle cx="${eyeLeftX}" cy="${faceY}" r="9" fill="${outlineColor}"/>
+        <circle cx="${eyeLeftX-3}" cy="${faceY-3}" r="3.5" fill="#FFFFFF"/>
+        <circle cx="${eyeLeftX+2}" cy="${faceY+2}" r="1.5" fill="#FFFFFF"/>
+        <!-- Right eye -->
+        <circle cx="${eyeRightX}" cy="${faceY}" r="9" fill="${outlineColor}"/>
+        <circle cx="${eyeRightX-3}" cy="${faceY-3}" r="3.5" fill="#FFFFFF"/>
+        <circle cx="${eyeRightX+2}" cy="${faceY+2}" r="1.5" fill="#FFFFFF"/>
+        <!-- Rosy cheeks blush -->
+        <ellipse cx="${eyeLeftX-6}" cy="${faceY+9}" rx="12" ry="5.5" fill="#FF85A5" opacity="0.45"/>
+        <ellipse cx="${eyeRightX+6}" cy="${faceY+9}" rx="12" ry="5.5" fill="#FF85A5" opacity="0.45"/>
+        <!-- Gentle sweet smile -->
+        <path d="M ${mouthX-8},${faceY+6} Q ${mouthX},${faceY+13} ${mouthX+8},${faceY+6}" fill="none" stroke="${outlineColor}" stroke-width="5" stroke-linecap="round"/>
+      `;
+      break;
+  }
+
+  // Floating ambient energy circles / particles around the peak stage (level >= 8)
+  let particlesMarkup = "";
+  if (level >= 8) {
+    particlesMarkup = `
+      <g class="${floatClass}">
+        <circle cx="50" cy="95" r="4" fill="${particleColor}" opacity="0.6"/>
+        <circle cx="206" cy="115" r="3.5" fill="${particleColor}" opacity="0.6"/>
+        <circle cx="65" cy="180" r="5" fill="${particleColor}" opacity="0.4"/>
+        <circle cx="191" cy="180" r="4.5" fill="${particleColor}" opacity="0.4"/>
+      </g>
+    `;
+  }
+
+  // -------------------------------------------------------------
+  // ASSEMBLE GLORIOUS DIGITAL ADULT SLIME SPRITE Output
+  // -------------------------------------------------------------
+  return `
+    <svg viewBox="0 0 256 256" xmlns="http://www.w3.org/2000/svg" style="width:100%; height:100%;">
+      <style>${svgCSS}</style>
+      <defs>
+        <!-- Dynamic Gradient definition -->
+        <radialGradient id="bodyGradient" cx="30%" cy="30%" r="70%">
+          <stop offset="0%" stop-color="${gradStart}"/>
+          <stop offset="72%" stop-color="${gradEnd}"/>
+          <stop offset="100%" stop-color="${outlineColor}"/>
+        </radialGradient>
+      </defs>
+
+      <!-- 1. Background Layers (Wings, Floating peak details) -->
+      ${wingsMarkup}
+      ${peakMarkup}
+
+      <!-- 2. Ambient Particles -->
+      ${particlesMarkup}
+
+      <!-- 3. Slime Base Group (Grounded shadow, Soft Bounce animation) -->
+      <g class="shadow-scale-anim" style="transform-origin: 128px 216px;">
+        <ellipse cx="128" cy="216" rx="${shadowRx}" ry="${shadowRy}" fill="rgba(0,0,0,0.18)"/>
+      </g>
+
+      <g class="${animationClass}">
+        <!-- Main Slimes Solid Body Path -->
+        <path d="${bodyPath}" fill="url(#bodyGradient)" stroke="${outlineColor}" stroke-width="6.5" stroke-linejoin="round"/>
+
+        <!-- High-Contrast Glass Volumetric Highlight spot -->
+        <ellipse cx="${isPlump ? 90 : (isHungry ? 104 : 96)}" cy="100" rx="14" ry="7" fill="#FFFFFF" opacity="0.25" transform="rotate(-15 ${isPlump ? 90 : (isHungry ? 104 : 96)} 100)"/>
+
+        <!-- 4. Element Horn / Crest (Renders on the head) -->
+        ${hornMarkup}
+
+        <!-- 5. Eyes & Mouth Face layout -->
+        ${eyesAndMouthSvg}
+
+        <!-- 6. Foreground Element Emblems / Accessories on Chest -->
+        ${emblemMarkup}
+      </g>
+
+      <!-- 7. Special Emotional Floating Symbols overlaying on top -->
+      ${specialEmotionOverlay}
     </svg>
   `;
 }

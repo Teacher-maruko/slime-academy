@@ -283,12 +283,7 @@ export interface AppData {
   teacherActionLogs?: TeacherActionLog[];
   lotterySpeed?: "instant" | "standard" | "animated";
   gachaHistoryList?: any[];
-  classConstructionData?: {
-  level: number;
-  progress: number;
-  target: number;
-  buildingName: string;
-};
+  classConstructionData?: any;
   classEventData?: any;
   classCollectionData?: any;
 }

@@ -64,7 +64,7 @@ class SafeRenderWrapper extends React.Component<{
             <div className="w-16 h-16 bg-red-50 border-4 border-red-500 text-red-500 rounded-2xl flex items-center justify-center mb-4 animate-bounce">
               <span className="text-3xl">⚠️</span>
             </div>
-            <h3 className="text-4xl font-black text-red-600 mb-2">
+            <h3 className="text-2xl font-black text-red-600 mb-2">
               系統發生錯誤 ({this.props.fallbackTitle})
             </h3>
             <p className="text-sm font-bold text-gray-500 mb-4">
@@ -407,19 +407,7 @@ export default function App() {
     groups: [],
     notes: "老師可以在這裡輸入今日叮嚀、作業或提醒事項...",
     password: "0301",
-    
-    bossName: "🗑️ 垃圾怪獸",
-    bossHp: 500,
-    bossMaxHp: 500,
-    
     timerSettings: { minutes: 5, seconds: 0 },
-    classConstructionData: {
-  level: 1,
-  progress: 0,
-  target: 100,
-  buildingName: "🌱 班級世界樹"
-},
-    
     backgroundGachaItems: defaultBackgroundGachaItems
   });
 
@@ -2493,37 +2481,6 @@ export default function App() {
                     <div className="pt-1">
                       <span className="text-xs font-extrabold text-[#5b21b6] block mb-2">👤 點選名字完成快速回報：</span>
                       <div className="grid grid-cols-2 sm:grid-cols-4 md:grid-cols-5 gap-2 max-h-[160px] overflow-y-auto pr-1">
-                        <div className="game-box p-4 mb-4 bg-white">
-  <h2 className="text-4xl font-black text-center text-green-700 mb-2">
-    {appData.classConstructionData?.buildingName}
-  </h2>
-
-  <div className="text-center text-2xl font-bold text-green-700">
-    Lv.{appData.classConstructionData?.level}
-  </div>
-
-  <div className="w-full bg-gray-200 rounded-full h-8 mt-3">
-    <div
-      className="bg-green-500 h-full transition-all"
-      style={{
-        width: `${
-          (
-            (appData.classConstructionData?.progress || 0) /
-            (appData.classConstructionData?.target || 100)
-          ) * 100
-        }%`
-      }}
-    />
-  </div>
-
-  <div className="text-center mt-2">
-    {appData.classConstructionData?.progress}
-    /
-    {appData.classConstructionData?.target}
-  </div>
-</div>
-                        
-                        
                         {appData.students.map((st) => {
                           const hasCompleted = t.completedBy.includes(st.id);
                           return (
@@ -2613,7 +2570,7 @@ export default function App() {
                 key={s.id}
                 onClick={() => handleOpenStudentGridItem(s)}
                 style={{ background: studentBgStyle }}
-                className={`student-card game-box p-4 border-[4px] flex flex-col items-center justify-between min-h-[360px] overflow-hidden relative cursor-pointer transition-all duration-300 ${
+                className={`student-card game-box p-4 border-[4px] flex flex-col items-center justify-between min-h-[260px] overflow-hidden relative cursor-pointer transition-all duration-300 ${
                   isMe
                     ? "border-emerald-500 shadow-[0_0_18px_rgba(16,185,129,0.8)] ring-4 ring-emerald-300 ring-offset-2 scale-102 hover:scale-105"
                     : "border-gray-700 hover:scale-103"
@@ -2714,7 +2671,7 @@ export default function App() {
                 })()}
                 
                 {/* Avatar section */}
-                <div className={`w-36 h-36 relative mb-2 z-10 drop-shadow-xl ${s.hasChosenEgg ? "slime-idle" : "animate-pulse"}`}>
+                <div className={`w-24 h-24 relative mb-2 z-10 drop-shadow-xl ${s.hasChosenEgg ? "slime-idle" : "animate-pulse"}`}>
                   {s.hasChosenEgg ? (
                     <div
                        className="w-full h-full"
@@ -2757,7 +2714,7 @@ export default function App() {
                     Lv.{s.pet?.level || 1}
                   </div>
                   <div className="text-sm font-bold text-orange-600 bg-white/95 px-2 py-0.5 rounded border border-orange-200 shadow-sm">
-                    ⭐ {s.points}
+                    {s.points} pts
                   </div>
                 </div>
               </div>
