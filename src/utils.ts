@@ -170,146 +170,142 @@ export function generateDetailedSlimeSVG(student: Partial<Student>): string {
   const isEgg = student?.hasChosenEgg === false || level === 1;
   const isCrackedEgg = level === 2;
 
-  // 1. Core Color Palettes
+  // 1. Core Color Palettes (Softer, more pastel)
   const palette = {
     magic: {
-      main: "#8A4FFF",
-      dark: "#5822B4",
-      light: "#BB99FF",
+      main: "#9D6FD4",
+      dark: "#6B4A9C",
+      light: "#C9B5E6",
       shine: "#FFFFFF",
-      border: "#1C1032",
-      horn: "#491C80",
-      hornLight: "#9C63E6",
-      particle: "#D4B3FF"
+      border: "#2D1B4E",
+      horn: "#5C3BA8",
+      hornLight: "#B89FD9",
+      particle: "#DFC7F0"
     },
-    crystal: {
-      main: "#48CFFF",
-      dark: "#1184B4",
-      light: "#A6ECFF",
+     crystal: {
+      main: "#6FD9FF",
+      dark: "#3C9FC9",
+      light: "#B4EBFF",
       shine: "#FFFFFF",
-      border: "#0C1D2A",
-      horn: "#1098CB",
-      hornLight: "#A6E8FF",
-      particle: "#BCF0FF"
+      border: "#1A3A4D",
+      horn: "#4DBFD0",
+      hornLight: "#B8E8F0",
+      particle: "#D0F0FF"
     },
     candy: {
-      main: "#FF75A9",
-      dark: "#D13271",
-      light: "#FFB8D3",
+      main: "#FF9BC5",
+      dark: "#E6699F",
+      light: "#FFD0E5",
       shine: "#FFFFFF",
-      border: "#2B0C1A",
-      horn: "#FF5E9B",
-      hornLight: "#FFF0F5",
-      particle: "#FFE4E1"
+      border: "#4D1A2D",
+      horn: "#FF7BA8",
+      hornLight: "#FFF0F8",
+      particle: "#FFE8F0"
     },
     forest: {
-      main: "#4FE075",
-      dark: "#1C9E40",
-      light: "#9CFBB8",
+      main: "#8FE89A",
+      dark: "#5CB85C",
+      light: "#C5F0CA",
       shine: "#FFFFFF",
-      border: "#0F2614",
-      horn: "#2DBE55",
-      hornLight: "#D4FFDE",
-      particle: "#ADE8BC"
+      border: "#2D5C33",
+      horn: "#6FD47E",
+      hornLight: "#E8F7ED",
+      particle: "#D0F0DB"
     },
     star: {
-      main: "#FFAC1C",
-      dark: "#C36400",
-      light: "#FFD67D",
+      main: "#FFD166",
+      dark: "#E6A833",
+      light: "#FFE8A8",
       shine: "#FFFFFF",
-      border: "#2E1C05",
-      horn: "#FF8C00",
-      hornLight: "#FFFACD",
-      particle: "#FFE57F"
+      border: "#664D00",
+      horn: "#FFC433",
+      hornLight: "#FFFADB",
+      particle: "#FFF4D0"
     }
   }[element] || {
-    main: "#FF75A9",
-    dark: "#D13271",
-    light: "#FFB8D3",
+    main: "#FF9BC5",
+    dark: "#E6699F",
+    light: "#FFD0E5",
     shine: "#FFFFFF",
-    border: "#2B0C1A",
-    horn: "#FF5E9B",
-    hornLight: "#FFF0F5",
-    particle: "#FFE4E1"
+    border: "#4D1A2D",
+    horn: "#FF7BA8",
+    hornLight: "#FFF0F8",
+    particle: "#FFE8F0"
   };
+
+    // Determine evolution stage
+  let evolutionStage = 0;
+  if (level <= 4) evolutionStage = 1; // Baby
+  else if (level <= 9) evolutionStage = 2; // Young
+  else if (level <= 14) evolutionStage = 3; // Teen
+  else if (level <= 19) evolutionStage = 4; // Elite
+  else evolutionStage = 5; // Legendary
 
   // Helper to draw single block
   const px = (col: number, row: number, fill: string, className = "") =>
     `<rect x="${col * 8}" y="${row * 8}" width="8" height="8" fill="${fill}" class="${className}"  />`;
 
-  // 2. CSS STYLES INJECTION - Smooth Idle Pixel Gaming Animations
+   // 2. CSS STYLES INJECTION - Smooth Idle Animations
   const css = `
     @keyframes sFloat {
       0%, 100% { transform: translateY(0px); }
-      50% { transform: translateY(-3px); }
+      50% { transform: translateY(-5px); }
     }
     @keyframes sBreathe {
       0%, 100% { transform: scale(1, 1); }
-      50% { transform: scale(1.03, 0.95); }
+      50% { transform: scale(1.06, 0.94); }
     }
     @keyframes shScale {
-      0%, 100% { transform: scaleX(1); opacity: 0.16; }
-      50% { transform: scaleX(0.85); opacity: 0.10; }
+      0%, 100% { transform: scaleX(1); opacity: 0.2; }
+      50% { transform: scaleX(0.75); opacity: 0.08; }
     }
     @keyframes spUp {
       0% { transform: translateY(0px) scale(1); opacity: 0; }
       20% { opacity: 0.95; }
-      100% { transform: translateY(-16px) scale(0.5); opacity: 0; }
+      100% { transform: translateY(-30px) scale(0.3); opacity: 0; }
     }
     @keyframes spUpAlt {
       0% { transform: translateY(0px) scale(0.8); opacity: 0; }
       30% { opacity: 1; }
-      100% { transform: translateY(-22px) scale(0.3); opacity: 0; }
+      100% { transform: translateY(-35px) scale(0.15); opacity: 0; }
     }
     @keyframes wL {
       0%, 100% { transform: rotate(0deg); }
-      50% { transform: rotate(-3deg); }
+      50% { transform: rotate(-5deg); }
     }
     @keyframes wR {
       0%, 100% { transform: rotate(0deg); }
-      50% { transform: rotate(3deg); }
-    }
-    @keyframes wfL {
-      0%, 100% { transform: translateY(0px) rotate(0deg); }
-      50% { transform: translateY(-1px) rotate(-5deg); }
-    }
-    @keyframes wfR {
-      0%, 100% { transform: translateY(0px) rotate(0deg); }
-      50% { transform: translateY(-1px) rotate(5deg); }
+      50% { transform: rotate(5deg); }
     }
     @keyframes sTiltShake {
       0%, 100% { transform: rotate(0deg) translateY(0px); }
-      10%, 30%, 50% { transform: rotate(-4deg) translateY(-1px); }
-      20%, 40% { transform: rotate(4deg) translateY(1px); }
+      10%, 30%, 50% { transform: rotate(-4deg) translateY(-2px); }
+      20%, 40% { transform: rotate(4deg) translateY(2px); }
       60% { transform: rotate(0deg) translateY(0px); }
     }
     .slime-shadow {
       animation: shScale 4s ease-in-out infinite;
       transform-origin: 128px 208px;
     }
+       .slime-shadow {
+      animation: shScale 4s ease-in-out infinite;
+      transform-origin: center;
+    }
     .float-grp {
       animation: sFloat 4s ease-in-out infinite;
-      transform-origin: 128px 200px;
+      transform-origin: center;
     }
     .breathe-grp {
       animation: sBreathe 3s ease-in-out infinite;
-      transform-origin: 128px 208px;
+      transform-origin: center;
     }
     .wiggle-l {
       animation: wL 3s ease-in-out infinite;
-      transform-origin: 96px 144px;
+      transform-origin: left center;
     }
     .wiggle-r {
       animation: wR 3s ease-in-out infinite;
-      transform-origin: 160px 144px;
-    }
-    .wing-l {
-      animation: wfL 3.5s ease-in-out infinite;
-      transform-origin: 64px 144px;
-    }
-    .wing-r {
-      animation: wfR 3.5s ease-in-out infinite;
-      transform-origin: 192px 144px;
+      transform-origin: right center;
     }
     .p-slow1 {
       animation: spUp 3.2s linear infinite;
@@ -321,32 +317,54 @@ export function generateDetailedSlimeSVG(student: Partial<Student>): string {
     }
     .hatch-shake {
       animation: sTiltShake 2.5s ease-in-out infinite;
-      transform-origin: 128px 208px;
+      transform-origin: center;
     }
     .sad-shrink-grp {
-      transform: scale(0.8);
-      transform-origin: 128px 208px;
+      transform: scale(0.85);
+      transform-origin: center;
     }
     @keyframes sGlow {
-      0%, 100% { filter: drop-shadow(0 0 1px #FBBF24) brightness(1); }
-      50% { filter: drop-shadow(0 0 6px #FBBF24) brightness(1.15); }
+      0%, 100% { filter: drop-shadow(0 0 2px #FBBF24) brightness(1); }
+      50% { filter: drop-shadow(0 0 10px #FBBF24) brightness(1.2); }
     }
     .excited-glow-grp {
       animation: sGlow 2s ease-in-out infinite;
     }
     @keyframes sHop {
       0%, 100% { transform: translateY(0px) scale(1, 1); }
-      25% { transform: translateY(-4px) scale(0.98, 1.02); }
-      50% { transform: translateY(0px) scale(1.02, 0.98); }
-      75% { transform: translateY(-2px) scale(0.99, 1.01); }
+      25% { transform: translateY(-8px) scale(0.96, 1.04); }
+      50% { transform: translateY(0px) scale(1.04, 0.96); }
+      75% { transform: translateY(-4px) scale(0.99, 1.01); }
     }
     .happy-hop-grp {
       animation: sHop 1.5s ease-in-out infinite;
-      transform-origin: 128px 208px;
+      transform-origin: center;
     }
     .tired-slow-grp .breathe-grp {
       animation-duration: 6s !important;
     }
+    @keyframes floatAura {
+      0%, 100% { opacity: 0.25; transform: scale(1); }
+      50% { opacity: 0.5; transform: scale(1.15); }
+    }
+    .aura {
+      animation: floatAura 3s ease-in-out infinite;
+    }
+    @keyframes orbitCompanion1 {
+      0% { transform: rotate(0deg) translateX(50px) rotate(0deg); }
+      100% { transform: rotate(360deg) translateX(50px) rotate(-360deg); }
+    }
+    @keyframes orbitCompanion2 {
+      0% { transform: rotate(120deg) translateX(50px) rotate(0deg); }
+      100% { transform: rotate(480deg) translateX(50px) rotate(-360deg); }
+    }
+    @keyframes orbitCompanion3 {
+      0% { transform: rotate(240deg) translateX(50px) rotate(0deg); }
+      100% { transform: rotate(600deg) translateX(50px) rotate(-360deg); }
+    }
+    .orbit1 { animation: orbitCompanion1 8s linear infinite; }
+    .orbit2 { animation: orbitCompanion2 8s linear infinite; }
+    .orbit3 { animation: orbitCompanion3 8s linear infinite; }
   `;
 
   // --- RENDERING ROUTINE: EGG (Level 1 / egg未選) ---
