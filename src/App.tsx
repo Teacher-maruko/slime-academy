@@ -2570,7 +2570,7 @@ export default function App() {
                 key={s.id}
                 onClick={() => handleOpenStudentGridItem(s)}
                 style={{ background: studentBgStyle }}
-                className={`student-card game-box p-4 border-[4px] flex flex-col items-center justify-between min-h-[260px] overflow-hidden relative cursor-pointer transition-all duration-300 ${
+                className={`student-card game-box p-4 border-[4px] flex flex-col items-center justify-between min-h-[360px] overflow-hidden relative cursor-pointer transition-all duration-300 ${
                   isMe
                     ? "border-emerald-500 shadow-[0_0_18px_rgba(16,185,129,0.8)] ring-4 ring-emerald-300 ring-offset-2 scale-102 hover:scale-105"
                     : "border-gray-700 hover:scale-103"
